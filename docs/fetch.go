@@ -27,7 +27,9 @@ type Function struct {
 	Type      FunctionType `json:"type"`
 	Signature string       `json:"signature"`
 	MethodOf  string       `json:"methodOf"`
-	Comments  []string     `json:"comments"`
+
+	Example  string   `json:"example"`
+	Comments []string `json:"comments"`
 }
 
 type Type struct {
@@ -72,6 +74,7 @@ func GetDoc(repo string) (*Doc, error) {
 		} else {
 			return
 		}
+		fn.Example = item.Find("textarea.Documentation-exampleCode").First().Text()
 		item.Find("p").Each(func(i int, p *goquery.Selection) {
 			par = p.Text()
 			if par != "" {
@@ -94,6 +97,8 @@ func GetDoc(repo string) (*Doc, error) {
 		} else {
 			return
 		}
+
+		fn.Example = item.Find("textarea.Documentation-exampleCode").First().Text()
 		item.Find("p").Each(func(i int, p *goquery.Selection) {
 			par = p.Text()
 			if par != "" {
