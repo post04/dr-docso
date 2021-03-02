@@ -1,5 +1,5 @@
 # dr-docso
-A discord bot to fetch and look at a packages documentation through discord.
+A discord bot to fetch and look at a packages documentation from pkg.go.dev through discord.
 
 # TODO
 
