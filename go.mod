@@ -1,4 +1,4 @@
-module github.com/postrequest69/dr-botso
+module github.com/postrequest69/dr-docso
 
 go 1.17
 
