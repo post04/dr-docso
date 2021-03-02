@@ -104,7 +104,7 @@ func GetDoc(repo string) (*Doc, error) {
 	})
 
 	// types
-	doc.Find("div.Documentation-types").Each(func(index int, item *goquery.Selection) {
+	doc.Find("div.Documentation-type").Each(func(index int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
 		t := Type{Signature: sign}
 		if matches := reType.FindStringSubmatch(sign); len(matches) == 3 {
