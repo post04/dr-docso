@@ -144,8 +144,8 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 				toSend += fmt.Sprintf("%v\nType: %v\nMethodOf: %v\nExample: %v\nComments: ```%v```\n", function.Signature, function.Type, function.MethodOf, function.Example, function.Comments[0])
 			}
 		}
-		if toSend == "" {
-			toSend = "No information avalible!"
+		if len(toSend) == 0 || len(toSend) > 2000 {
+			toSend = "No information avalible or information exceeds 2000 characters."
 		}
 		session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 			Title:       "Function: " + name,
@@ -174,14 +174,24 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 			var toSend string
 			for _, function := range doc.Functions {
 				if strings.EqualFold(function.Name, name) {
+					if function.Example != "" {
+						function.Example = fmt.Sprintf("```go\n%v```", function.Example)
+					}
 					if function.Example == "" {
 						function.Example = "None"
 					}
+					if function.MethodOf == "" {
+						function.MethodOf = "None"
+					}
+
 					if len(function.Comments) == 0 {
 						function.Comments = append(function.Comments, "None")
 					}
 					toSend += fmt.Sprintf("%v\nType: %v\nMethodOf: %v\nExample: %v\nComments: ```%v```\n", function.Signature, function.Type, function.MethodOf, function.Example, function.Comments[0])
 				}
+			}
+			if len(toSend) == 0 || len(toSend) > 2000 {
+				toSend = "No information avalible or information exceeds 2000 characters."
 			}
 			session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 				Title:       "Function: " + name,
@@ -199,6 +209,9 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 					}
 					toSend += fmt.Sprintf("Type: %v\nSignature: ```go\n%v```\nComments: %v\n", dType.Type, dType.Signature, dType.Comments[0])
 				}
+			}
+			if len(toSend) == 0 || len(toSend) > 2000 {
+				toSend = "No information avalible or information exceeds 2000 characters."
 			}
 			session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 				Title:       "Type: " + name,
