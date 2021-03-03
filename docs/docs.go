@@ -3,6 +3,8 @@ package docs
 import (
 	"net/http"
 	"regexp"
+	"strings"
+	"unicode"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -92,7 +94,7 @@ func GetDoc(repo string) (*Doc, error) {
 			Type:      FnMethod,
 		}
 		if matches := reMethod.FindStringSubmatch(sign); len(matches) == 3 {
-			fn.MethodOf = matches[1]
+			fn.MethodOf = extractType(matches[1])
 			fn.Name = matches[2]
 		} else {
 			return
@@ -131,4 +133,21 @@ func GetDoc(repo string) (*Doc, error) {
 		Functions: funcs,
 		Types:     types,
 	}, nil
+}
+
+// extractType extracts the type from a method definition
+// i.e, `t *Type` -> `Type`
+func extractType(s string) string {
+	var buff strings.Builder
+	r := []rune(s)
+	for i := len(r) - 1; i >= 0; i-- {
+		if unicode.IsSpace(r[i]) {
+			break
+		}
+		if r[i] == '*' {
+			break
+		}
+		buff.WriteRune(r[i])
+	}
+	return buff.String()
 }

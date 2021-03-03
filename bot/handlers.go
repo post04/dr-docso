@@ -138,3 +138,41 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	// TODO: implement this
 	return nil
 }
+
+func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
+	doc, err := docs.GetDoc(pkg)
+	if err != nil {
+		return errResponse("Error while getting the page for the package `%s`", pkg)
+	}
+	if len(doc.Functions) == 0 {
+		return errResponse("Package `%s` seems to have no functions", pkg)
+	}
+
+	var msg string
+
+	for _, fn := range doc.Functions {
+		if fn.Type == docs.FnMethod &&
+			strings.EqualFold(fn.Name, name) &&
+			strings.EqualFold(fn.MethodOf, t) {
+			msg += fmt.Sprintf("`%s`", fn.Signature)
+			if len(fn.Comments) > 0 {
+				msg += fmt.Sprintf("\n%s", fn.Comments[0])
+			} else {
+				msg += "\n*no info*"
+			}
+			if fn.Example != "" {
+				msg += fmt.Sprintf("\nExample:\n```\n%s\n```", fn.Example)
+			}
+		}
+	}
+	if msg == "" {
+		return errResponse("Package `%s` does not have `func(%s) %s`", pkg, t, name)
+	}
+	if len(msg) > 2000 {
+		msg = fmt.Sprintf("%s\n\n*note: the message is trimmed to fit the 2k character limit*", msg[:1950])
+	}
+	return &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
+		Description: msg,
+	}
+}

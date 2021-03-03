@@ -37,5 +37,5 @@ type ReactionListener struct {
 	PageLimit   int
 	UserID      string
 	Data        *docs.Doc
-	LastUsed    int64
+	LastUsed    int64 // use uint64 maybe?
 }
