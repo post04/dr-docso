@@ -65,7 +65,7 @@ func GetDoc(repo string) (*Doc, error) {
 	)
 
 	// funcs
-	doc.Find("div.Documentation-function").Each(func(index int, item *goquery.Selection) {
+	doc.Find("div.Documentation-function").Each(func(_ int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
 		fn := Function{
 			Signature: sign,
@@ -77,7 +77,7 @@ func GetDoc(repo string) (*Doc, error) {
 			return
 		}
 		fn.Example = item.Find("textarea.Documentation-exampleCode").First().Text()
-		item.Find("p").Each(func(i int, p *goquery.Selection) {
+		item.Find("p").Each(func(_ int, p *goquery.Selection) {
 			par = p.Text()
 			if par != "" {
 				fn.Comments = append(fn.Comments, par)
@@ -87,7 +87,7 @@ func GetDoc(repo string) (*Doc, error) {
 	})
 
 	// methods
-	doc.Find("div.Documentation-typeMethod").Each(func(index int, item *goquery.Selection) {
+	doc.Find("div.Documentation-typeMethod").Each(func(_ int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
 		fn := Function{
 			Signature: sign,
@@ -101,7 +101,7 @@ func GetDoc(repo string) (*Doc, error) {
 		}
 
 		fn.Example = item.Find("textarea.Documentation-exampleCode").First().Text()
-		item.Find("p").Each(func(i int, p *goquery.Selection) {
+		item.Find("p").Each(func(_ int, p *goquery.Selection) {
 			par = p.Text()
 			if par != "" {
 				fn.Comments = append(fn.Comments, par)
@@ -111,7 +111,7 @@ func GetDoc(repo string) (*Doc, error) {
 	})
 
 	// types
-	doc.Find("div.Documentation-type").Each(func(index int, item *goquery.Selection) {
+	doc.Find("div.Documentation-type").Each(func(_ int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
 		t := Type{Signature: sign}
 		if matches := reType.FindStringSubmatch(sign); len(matches) == 3 {
@@ -120,7 +120,7 @@ func GetDoc(repo string) (*Doc, error) {
 		} else {
 			return
 		}
-		item.Find("p").Each(func(i int, p *goquery.Selection) {
+		item.Find("p").Each(func(_ int, p *goquery.Selection) {
 			par = p.Text()
 			if par != "" {
 				t.Comments = append(t.Comments, par)
