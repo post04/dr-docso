@@ -43,10 +43,25 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func funcResponse(pkg, name string) *discordgo.MessageEmbed {
 	// TODO: implement caching for stdlib
-	doc, err := docs.GetDoc(pkg)
-	if err != nil {
-		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
+	var err error
+	// check if pkg is in stdlib and is cached
+	doc, ok := StdlibCache[pkg]
+	if !ok || doc == nil {
+		doc, err = docs.GetDoc(pkg)
+		if err != nil {
+			return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
+		}
 	}
+
+	// cache the sdlib pkg
+	if ok && doc != nil {
+		StdlibCache[pkg] = doc
+	}
+	// cache if it's a stdlib pkg
+	if d, ok := StdlibCache[pkg]; ok && d == nil && doc != nil {
+		StdlibCache[pkg] = doc
+	}
+
 	if len(doc.Functions) == 0 {
 		return errResponse("No results found for package: %q, function: %q", pkg, name)
 	}

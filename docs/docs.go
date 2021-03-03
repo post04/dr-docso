@@ -35,10 +35,11 @@ type Function struct {
 }
 
 type Type struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"`
-	Signature string   `json:"signature"`
-	Comments  []string `json:"comments"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Signature string `json:"signature"`
+
+	Comments []string `json:"comments"`
 }
 
 type Doc struct {
@@ -47,6 +48,7 @@ type Doc struct {
 	Functions []Function `json:"functions"`
 }
 
+// GetDoc returns a document representing the specified package/module.
 func GetDoc(repo string) (*Doc, error) {
 	resp, err := http.Get(BASE + repo)
 	if err != nil {
