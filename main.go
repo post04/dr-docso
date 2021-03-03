@@ -40,20 +40,19 @@ func main() {
 	bot, err := discordgo.New("Bot " + c.Token)
 	if err != nil {
 		log.Fatal("ERROR LOGGING IN", err)
-		return
 	}
 	bot.AddHandler(ready)
 	bot.AddHandler(reactionListen)
+
 	commandHandlerStruct := New(c.Prefix, true)
 	commandHandlerStruct.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev!", DocsCommand)
 	bot.AddHandler(commandHandlerStruct.OnMessage)
 	err = bot.Open()
 	if err != nil {
 		log.Fatal("ERROR OPENING CONNECTION", err)
-		return
 	}
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	_ = bot.Close()
+	bot.Close()
 }

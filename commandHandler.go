@@ -28,7 +28,7 @@ func (handler *CommandHandler) AddCommand(name string, help string, description 
 
 // OnMessage handles onmessage event from discordgo for command handler lol
 func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
-	parts := strings.Split(msg.Content, " ")
+	parts := strings.Fields(msg.Content)
 	if handler.OnMessageHandler != nil {
 		go handler.OnMessageHandler(session, msg)
 	}
@@ -38,6 +38,7 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 	if len(parts) < 1 || !strings.HasPrefix(parts[0], handler.Prefix) {
 		return
 	}
+
 	if handler.PreCommandHandler != nil {
 		if !handler.PreCommandHandler(session, msg) {
 			return
@@ -46,38 +47,34 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 	if strings.ToLower(parts[0][len(handler.Prefix):]) == "help" {
 		fmt.Println("help command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
 		if len(parts) == 1 {
-			var embed = &discordgo.MessageEmbed{
-				Footer:      &discordgo.MessageEmbedFooter{},
+			embed := &discordgo.MessageEmbed{
+				Footer: &discordgo.MessageEmbedFooter{
+					Text: fmt.Sprintf("Reminder: You can define a command to get help with like %s help commandName", handler.Prefix),
+				},
 				Description: "",
-				Title:       "",
+				Title:       "Showing all possible commands!",
 			}
-			var foot = "Reminder: You can define a command to get help with like " + handler.Prefix + "help commandName"
-			embed.Footer.Text = foot
-			var desc string
-			embed.Title = "Showing all possible commands!"
-			var i = 0
+			i := 0
 			for name := range handler.Commands {
 				i++
-				desc += fmt.Sprint(i) + ".) " + name + "\n"
+				embed.Description += fmt.Sprintf("%d.) %s\n", i, name)
 			}
-			embed.Description = desc
+
 			session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 		} else {
-			var embed = &discordgo.MessageEmbed{
-				Description: "",
-				Title:       "",
-			}
+			embed := &discordgo.MessageEmbed{}
 			if command, ok := handler.Commands[strings.ToLower(parts[1])]; ok {
-				var desc string
-				desc += "Name: " + strings.ToLower(parts[1]) + "\n"
-				desc += "Help: " + command.Help
-				desc += "\n" + "Description: " + command.Description
-				embed.Description = desc
+				embed.Description = fmt.Sprintf("Name: %s\n"+
+					"help: %s\n"+
+					"description: %s",
+					strings.ToLower(parts[1]),
+					command.Help,
+					command.Description)
 				embed.Title = strings.ToLower(parts[1]) + " Command!"
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			} else {
 				embed.Title = "Invalid command!"
-				embed.Description = "Please use " + handler.Prefix + "help to get all commands!"
+				embed.Description = fmt.Sprintf("Please use %s help to get all commands!", handler.Prefix)
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			}
 		}
