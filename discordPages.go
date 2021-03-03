@@ -23,10 +23,10 @@ func MakeTimestamp() int64 {
 
 func checkListeners() {
 	for {
-		time.Sleep((60 * 5) * time.Second)
-		var now = MakeTimestamp()
+		time.Sleep(6 * time.Minute)
+		now := MakeTimestamp()
 		for key, listener := range pageListeners {
-			if (now - listener.LastUsed) > 300000 {
+			if now-listener.LastUsed > 300000 {
 				delete(pageListeners, key)
 			}
 		}
@@ -35,7 +35,6 @@ func checkListeners() {
 
 // here is where we listen for reactions (for the pages)
 func reactionListen(session *discordgo.Session, reaction *discordgo.MessageReactionAdd) {
-
 	// if the message being reacted to is in the reaction map
 	if _, ok := pageListeners[reaction.MessageID]; ok {
 		// validating that the user reacting is indeed the user that owns the listener
@@ -55,7 +54,7 @@ func reactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 				break
 			}
 			// decrease current page
-			pageListeners[reaction.MessageID].CurrentPage--
+			pageListeners[reaction.MessageID].CurrentPage -= 1
 			textTosend := formatForMessage(pageListeners[reaction.MessageID])
 			session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, &discordgo.MessageEmbed{
 				Title:       pageListeners[reaction.MessageID].Type,

@@ -11,7 +11,7 @@ import (
 func New(prefix string, ignoreBots bool) *CommandHandler {
 	return &CommandHandler{
 		Prefix:     prefix,
-		Commands:   map[string]*Command{},
+		Commands:   make(map[string]*Command),
 		IgnoreBots: ignoreBots,
 	}
 }
@@ -51,9 +51,9 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("Reminder: You can define a command to get help with like %s help commandName", handler.Prefix),
 				},
-				Description: "",
-				Title:       "Showing all possible commands!",
+				Title: "Showing all possible commands!",
 			}
+
 			i := 0
 			for name := range handler.Commands {
 				i++

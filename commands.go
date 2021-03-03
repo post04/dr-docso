@@ -9,10 +9,9 @@ import (
 )
 
 func formatForMessage(page *ReactionListener) string {
-	toReturn := ""
-	var max = page.CurrentPage * 10
-	max--
-	var min = max - 9
+	s := ""
+	max := page.CurrentPage*10 - 1
+	min := max - 9
 	curr := min
 	if page.Type == "functions" {
 		if max > len(page.Data.Functions) {
@@ -20,7 +19,7 @@ func formatForMessage(page *ReactionListener) string {
 		}
 		for _, function := range page.Data.Functions[min:max] {
 			curr++
-			toReturn += fmt.Sprintf("\n%v.) %v", curr, function.Name)
+			s += fmt.Sprintf("\n%v.) %v", curr, function.Name)
 		}
 	}
 	if page.Type == "types" {
@@ -29,10 +28,10 @@ func formatForMessage(page *ReactionListener) string {
 		}
 		for _, dType := range page.Data.Types[min:max] {
 			curr++
-			toReturn += fmt.Sprintf("\n%v.) %v", curr, dType.Name)
+			s += fmt.Sprintf("\n%v.) %v", curr, dType.Name)
 		}
 	}
-	return toReturn
+	return s
 }
 
 // DocsCommand is the discord command for viewing documentation from discord!
@@ -41,6 +40,7 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 		session.ChannelMessageSendEmbed(msg.ChannelID, docsCommandHelpEmbed)
 		return
 	}
+
 	// if the command is being used to just get information on the package
 	if len(arguments) == 1 {
 		doc, err := docs.GetDoc(arguments[0])
@@ -53,11 +53,12 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 			return
 		}
 		session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
-			Title:       "Info for " + arguments[0],
-			Description: fmt.Sprintf("Types: %v\nFunctions: %v", len(doc.Types), len(doc.Functions)),
+			Title:       fmt.Sprintf("Info for %s", arguments[0]),
+			Description: fmt.Sprintf("Types: %d\nFunctions: %d", len(doc.Types), len(doc.Functions)),
 		})
 		return
 	}
+
 	// if the command is being used to get a list of the functions or types of a package
 	if len(arguments) == 2 {
 		doc, err := docs.GetDoc(arguments[0])
@@ -125,38 +126,36 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 		// 	return
 		// }
 		name := arguments[1]
-		var toSend string
+		var s string
 		for _, function := range doc.Functions {
 			if strings.EqualFold(function.Name, name) {
+				s += fmt.Sprintf("`%s`", function.Signature)
+				if len(function.Comments) > 0 {
+					s += fmt.Sprintf("\n%s", function.Comments[0])
+				} else {
+					s += "\nNo comment available"
+				}
 				if function.Example != "" {
-					function.Example = fmt.Sprintf("```go\n%v```", function.Example)
+					s += fmt.Sprintf("\nExample:\n```go\n%s\n```", function.Example)
 				}
-				if function.Example == "" {
-					function.Example = "None"
-				}
-				if function.MethodOf == "" {
-					function.MethodOf = "None"
-				}
-
-				if len(function.Comments) == 0 {
-					function.Comments = append(function.Comments, "None")
-				}
-				toSend += fmt.Sprintf("%v\nType: %v\nMethodOf: %v\nExample: %v\nComments: ```%v```\n", function.Signature, function.Type, function.MethodOf, function.Example, function.Comments[0])
 			}
 		}
-		if len(toSend) == 0 || len(toSend) > 2000 {
-			toSend = "No information avalible or information exceeds 2000 characters."
+		if s == "" {
+			s = "no information available"
+		} else if len(s) > 2000 {
+			s = fmt.Sprintf("%s\n*message trimmed to fit 2k char limit*", s[:1800])
 		}
 		session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 			Title:       "Function: " + name,
-			Description: toSend,
+			Description: s,
 		})
 		return
 	}
+
 	// if the command is being used to get a specific function or type of a package
 	if len(arguments) == 3 {
 		arg := strings.ToLower(arguments[1])
-		if arg != "functions" && arg != "types" {
+		if arg != "function" && arg != "type" {
 			session.ChannelMessageSendEmbed(msg.ChannelID, docsCommandHelpEmbed)
 			return
 		}
@@ -169,53 +168,54 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 			session.ChannelMessageSend(msg.ChannelID, "It seems this package doesn't exist according to pkg.go.dev!")
 			return
 		}
-		if arg == "functions" {
+		if arg == "function" {
 			name := arguments[2]
-			var toSend string
+			var s string
 			for _, function := range doc.Functions {
 				if strings.EqualFold(function.Name, name) {
+					s += fmt.Sprintf("`%s`", function.Signature)
+					if len(function.Comments) > 0 {
+						s += fmt.Sprintf("\n%s", function.Comments[0])
+					} else {
+						s += "\nNo comment available"
+					}
 					if function.Example != "" {
-						function.Example = fmt.Sprintf("```go\n%v```", function.Example)
+						s += fmt.Sprintf("\nExample:\n```go\n%s\n```", function.Example)
 					}
-					if function.Example == "" {
-						function.Example = "None"
-					}
-					if function.MethodOf == "" {
-						function.MethodOf = "None"
-					}
-
-					if len(function.Comments) == 0 {
-						function.Comments = append(function.Comments, "None")
-					}
-					toSend += fmt.Sprintf("%v\nType: %v\nMethodOf: %v\nExample: %v\nComments: ```%v```\n", function.Signature, function.Type, function.MethodOf, function.Example, function.Comments[0])
 				}
 			}
-			if len(toSend) == 0 || len(toSend) > 2000 {
-				toSend = "No information avalible or information exceeds 2000 characters."
+			if s == "" {
+				s = "no information available"
+			} else if len(s) > 2000 {
+				s = fmt.Sprintf("%s\n*message trimmed to fit 2k char limit*", s[:1800])
 			}
 			session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 				Title:       "Function: " + name,
-				Description: toSend,
+				Description: s,
 			})
 			return
 		}
-		if arg == "types" {
+		if arg == "type" {
 			name := arguments[2]
-			var toSend string
+			var s string
 			for _, dType := range doc.Types {
 				if strings.EqualFold(dType.Name, name) {
-					if len(dType.Comments) == 0 {
-						dType.Comments = append(dType.Comments, "None")
+					s += fmt.Sprintf("```go\n%s\n```", dType.Signature)
+					if len(dType.Comments) > 0 {
+						s += fmt.Sprintf("\n%s", dType.Comments[0])
+					} else {
+						s += "no comments available"
 					}
-					toSend += fmt.Sprintf("Type: %v\nSignature: ```go\n%v```\nComments: %v\n", dType.Type, dType.Signature, dType.Comments[0])
 				}
 			}
-			if len(toSend) == 0 || len(toSend) > 2000 {
-				toSend = "No information avalible or information exceeds 2000 characters."
+			if s == "" {
+				s = "no information available"
+			} else if len(s) > 2000 {
+				s = fmt.Sprintf("%s\n*message trimmed to fit the 2k char limit*", s[:1900])
 			}
 			session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 				Title:       "Type: " + name,
-				Description: toSend,
+				Description: s,
 			})
 			return
 		}
