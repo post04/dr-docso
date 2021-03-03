@@ -9,7 +9,9 @@ import (
 
 const (
 	// all the emojis we use
-	leftArrow, rightArrow, destroyEmoji = "⬅️", "➡️", "❌"
+	leftArrow    = "⬅️"
+	rightArrow   = "➡️"
+	destroyEmoji = "❌"
 )
 
 var (
@@ -45,11 +47,11 @@ func reactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 		switch reaction.Emoji.Name {
 		// when the reaction used is a left arrow (page decrease)
 		case leftArrow:
-			// update last used so the lsitener isn't deemed inactive
+			// update last used so the listener isn't deemed inactive
 			pageListeners[reaction.MessageID].LastUsed = MakeTimestamp()
-			// remove reaction, better user expirence
+			// remove reaction, better user experience
 			session.MessageReactionRemove(reaction.ChannelID, reaction.MessageID, leftArrow, reaction.UserID)
-			// If page is already 1 aka lowest it can be
+			// If page is already 1 (minimum it can be)
 			if pageListeners[reaction.MessageID].CurrentPage == 1 {
 				break
 			}
