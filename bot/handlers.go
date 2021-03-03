@@ -8,8 +8,6 @@ import (
 	"github.com/postrequest69/dr-docso/docs"
 )
 
-import ()
-
 func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var msg *discordgo.MessageEmbed
 	fields := strings.Fields(m.Content)
