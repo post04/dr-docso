@@ -18,6 +18,7 @@ type CommandHandler struct {
 	IgnoreBots        bool
 	OnMessageHandler  func(session *discordgo.Session, msg *discordgo.MessageCreate)
 	PreCommandHandler func(session *discordgo.Session, msg *discordgo.MessageCreate) bool
+	HelpCommand       *discordgo.MessageEmbed
 }
 
 // Config config struct

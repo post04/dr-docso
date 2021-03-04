@@ -46,9 +46,10 @@ func main() {
 	bot.AddHandler(cmd.ReactionListen)
 
 	commandHandlerStruct := New(c.Prefix, true)
-	commandHandlerStruct.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev!", cmd.HandleDoc)
-	commandHandlerStruct.AddCommand("getfuncs", "{prefix}getfuncs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev!", cmd.FuncsPages)
-	commandHandlerStruct.AddCommand("gettypes", "{prefix}gettypes github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev!", cmd.TypesPages)
+	commandHandlerStruct.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev", cmd.HandleDoc)
+	commandHandlerStruct.AddCommand("getfuncs", "{prefix}getfuncs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev", cmd.FuncsPages)
+	commandHandlerStruct.AddCommand("gettypes", "{prefix}gettypes github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev", cmd.TypesPages)
+	commandHandlerStruct.GenHelp()
 	bot.AddHandler(commandHandlerStruct.OnMessage)
 	err = bot.Open()
 	if err != nil {
