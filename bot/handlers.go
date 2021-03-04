@@ -282,7 +282,7 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []st
 	case 0: // probably impossible
 		return
 	case 1: // send a help command here
-		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
+		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("gettypes", prefix))
 		return
 	case 2: // command + pkg (send page if possible)
 		//TODO impl this
@@ -317,7 +317,7 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []st
 		pageListeners[m.ID] = page
 		return
 	default: // too many arguments
-		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
+		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("gettypes", prefix))
 		return
 	}
 }
