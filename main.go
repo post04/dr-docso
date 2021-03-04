@@ -10,7 +10,7 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
-	cmd "github.com/postrequest69/dr-docso/bot"
+	cmd "github.com/post04/dr-docso/bot"
 )
 
 var (

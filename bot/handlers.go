@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/postrequest69/dr-docso/docs"
+	"github.com/post04/dr-docso/docs"
 )
 
 // DocsHelpEmbed - the embed to give help to the docs command.

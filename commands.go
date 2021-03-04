@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	bot "github.com/postrequest69/dr-docso/bot"
-	"github.com/postrequest69/dr-docso/docs"
+	bot "github.com/post04/dr-docso/bot"
+	"github.com/post04/dr-docso/docs"
 )
 
 // DocsCommand is the discord command for viewing documentation from discord!

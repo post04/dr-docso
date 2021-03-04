@@ -1,7 +1,7 @@
 // Code generated, do not edit
 package bot
 
-import "github.com/postrequest69/dr-docso/docs"
+import "github.com/post04/dr-docso/docs"
 
 var StdlibCache = map[string]*docs.Doc{
 	"bufio":                                 nil,

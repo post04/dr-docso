@@ -1,6 +1,6 @@
-module github.com/postrequest69/dr-docso
+module github.com/post04/dr-docso
 
-go 1.17
+go 1.15
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
