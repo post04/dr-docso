@@ -85,6 +85,9 @@ func funcResponse(pkg, name string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: func %s", pkg, name),
 		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
 	}
 }
 
@@ -128,6 +131,9 @@ func typeResponse(pkg, name string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: type %s", pkg, name),
 		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
 	}
 }
 
@@ -181,6 +187,9 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
 		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
 	}
 }
 
