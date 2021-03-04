@@ -44,6 +44,7 @@ type Type struct {
 type Doc struct {
 	URL       string     `json:"url"`
 	Name      string     `json:"name"`
+	Overview  string     `json:"overview"`
 	Types     []Type     `json:"types"`
 	Functions []Function `json:"functions"`
 }
@@ -60,10 +61,12 @@ func GetDoc(pkg string) (*Doc, error) {
 		return nil, err
 	}
 	var (
-		funcs []Function
-		types []Type
-		sign  string
-		par   string
+		funcs    []Function
+		types    []Type
+		overview string
+
+		sign string
+		par  string
 	)
 
 	// funcs
@@ -130,8 +133,18 @@ func GetDoc(pkg string) (*Doc, error) {
 		})
 		types = append(types, t)
 	})
+
+	// overview
+	doc.Find("section.Documentation-overview > p").Each(func(_ int, p *goquery.Selection) {
+		par = p.Text()
+		if par != "" {
+			overview += par + "\n"
+		}
+	})
+
 	return &Doc{
 		URL:       BASE + pkg,
+		Overview:  overview,
 		Name:      pkg,
 		Functions: funcs,
 		Types:     types,
