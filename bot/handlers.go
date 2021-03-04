@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/post04/dr-docso/docs"
+	"github.com/post04/dr-docso/glob"
 )
 
 // DocsHelpEmbed - the embed to give help to the docs command.
@@ -165,6 +166,11 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 }
 
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
+	if strings.Contains(t, "*") ||
+		strings.Contains(name, "*") {
+		return methodGlobResponse(pkg, t, name)
+	}
+
 	doc, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("Error while getting the page for the package `%s`", pkg)
@@ -306,5 +312,51 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []st
 	default: // too many arguments
 		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("gettypes", prefix))
 		return
+	}
+}
+
+func methodGlobResponse(pkg, t, name string) *discordgo.MessageEmbed {
+	reT, err := glob.Compile(t)
+	if err != nil {
+		return errResponse("Error processing glob pattern:\n```\n%s\n```", err)
+	}
+	reN, err := glob.Compile(name)
+	if err != nil {
+		return errResponse("Error processing glob pattern:\n```\n%s\n```", err)
+	}
+	doc, err := getDoc(pkg)
+	if err != nil {
+		return errResponse("An error occurred while getting the page for the package `%s`", pkg)
+	}
+
+	if len(doc.Functions) == 0 || len(doc.Types) == 0 {
+		return errResponse("No results found matching the expression `%s.%s` in package `%s`", t, name, pkg)
+	}
+
+	var msg string
+	for _, fn := range doc.Functions {
+		if fn.Type == docs.FnMethod &&
+			reT.MatchString(fn.MethodOf) &&
+			reN.MatchString(fn.Name) {
+			msg += fmt.Sprintf("`%s`:\n", fn.Signature)
+			if len(fn.Comments) > 0 {
+				msg += fn.Comments[0]
+			} else {
+				msg += "*no information available*"
+			}
+		}
+	}
+	if msg == "" {
+		return errResponse("No results found matching the expression `%s.%s` in package `%s`", t, name, pkg)
+	}
+	if len(msg) > 2000 {
+		msg = fmt.Sprintf("%s\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
+	}
+	return &discordgo.MessageEmbed{
+		Title:       "Matches",
+		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
 	}
 }
