@@ -40,26 +40,10 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func funcResponse(pkg, name string) *discordgo.MessageEmbed {
-	// TODO: implement caching for stdlib
-	var err error
-	// check if pkg is in stdlib and is cached
-	doc, ok := StdlibCache[pkg]
-	if !ok || doc == nil {
-		doc, err = docs.GetDoc(pkg)
-		if err != nil {
-			return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
-		}
+	doc, err := getDoc(pkg)
+	if err != nil {
+		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
 	}
-
-	// cache the sdlib pkg
-	if ok && doc != nil {
-		StdlibCache[pkg] = doc
-	}
-	// cache if it's a stdlib pkg
-	if d, ok := StdlibCache[pkg]; ok && d == nil && doc != nil {
-		StdlibCache[pkg] = doc
-	}
-
 	if len(doc.Functions) == 0 {
 		return errResponse("No results found for package: %q, function: %q", pkg, name)
 	}
@@ -102,7 +86,7 @@ func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
 }
 
 func typeResponse(pkg, name string) *discordgo.MessageEmbed {
-	doc, err := docs.GetDoc(pkg)
+	doc, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("An error occurred while getting the page for the package `%s`", pkg)
 	}
@@ -144,7 +128,7 @@ func helpShortResponse() *discordgo.MessageEmbed {
 
 func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	// doc, err
-	_, err := docs.GetDoc(pkg)
+	_, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("An error occured when requesting the page for the package `%s`", pkg)
 	}
@@ -153,7 +137,7 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 }
 
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
-	doc, err := docs.GetDoc(pkg)
+	doc, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("Error while getting the page for the package `%s`", pkg)
 	}
@@ -188,4 +172,21 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
 		Description: msg,
 	}
+}
+
+func getDoc(pkg string) (*docs.Doc, error) {
+	var err error
+	doc, ok := StdlibCache[pkg]
+	if !ok || doc == nil {
+		doc, err = docs.GetDoc(pkg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// cache the stdlib pkg
+	if ok && doc != nil {
+		StdlibCache[pkg] = doc
+	}
+	return doc, nil
 }
