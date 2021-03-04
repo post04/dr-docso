@@ -30,16 +30,30 @@ func (handler *CommandHandler) AddCommand(name string, help string, description 
 func (handler *CommandHandler) GenHelp() {
 	embed := &discordgo.MessageEmbed{
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("Use `%s help <command>` to get more info about a command.", handler.Prefix),
+			Text: fmt.Sprintf("Reminder: You can define a command to get help with like %s help commandName", handler.Prefix),
 		},
-		Title:       "Available commands",
+		Title:       "Showing all possible commands!",
 		Description: "```autoit\n",
 	}
 
+	var longestCommand int
+	desc := []string{}
 	for name := range handler.Commands {
-		embed.Description += fmt.Sprintf("%s%-15s | %s\n", handler.Prefix, name, handler.Commands[name].Description)
+		if len(name) > longestCommand {
+			longestCommand = len(name)
+		}
+		desc = append(desc, name)
 	}
-	embed.Description += "```"
+	fmt.Println(longestCommand)
+	for pos, descPiece := range desc {
+		spaces := " "
+		fmt.Println(descPiece)
+		if len(descPiece) < longestCommand {
+			spaces = strings.Repeat(" ", longestCommand-len(descPiece)+1)
+		}
+		desc[pos] = fmt.Sprintf("%v%v%v#%v", handler.Prefix, descPiece, spaces, handler.Commands[descPiece].Description)
+	}
+	embed.Description += strings.Join(desc, "\n") + "```"
 	handler.HelpCommand = embed
 }
 
