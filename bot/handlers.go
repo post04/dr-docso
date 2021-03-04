@@ -31,21 +31,7 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, arguments []str
 			split := strings.Split(fields[2], ".")
 			msg = methodResponse(fields[1], split[0], split[1])
 		} else {
-			msg = funcResponse(fields[1], fields[2])
-		}
-	case 4:
-		switch strings.ToLower(fields[2]) {
-		case "func", "function", "fn":
-			if strings.Contains(fields[3], ".") {
-				split := strings.Split(fields[3], ".")
-				msg = methodResponse(fields[1], split[0], split[1])
-			} else {
-				msg = funcResponse(fields[1], fields[3])
-			}
-		case "type":
-			msg = typeResponse(fields[1], fields[3])
-		default:
-			msg = errResponse("Unsupported search type %q\nValid options are:\n\t`func`\n\t`type`", fields[2])
+			msg = queryResponse(fields[1], fields[2])
 		}
 	default:
 		msg = errResponse("Too many arguments.")
@@ -57,18 +43,13 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, arguments []str
 	s.ChannelMessageSendEmbed(m.ChannelID, msg)
 }
 
-func funcResponse(pkg, name string) *discordgo.MessageEmbed {
+func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	doc, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
 	}
-	if len(doc.Functions) == 0 {
-		return errResponse("No results found for package: %q, function: %q", pkg, name)
-	}
 
 	var msg string
-
-	// TODO(note): maybe use levenshtein here?
 	for _, fn := range doc.Functions {
 		if fn.Type == docs.FnNormal && strings.EqualFold(fn.Name, name) {
 			// match found
@@ -86,13 +67,26 @@ func funcResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 
 	if msg == "" {
-		return errResponse("The package `%s` does not have function `%s`", pkg, name)
+		for _, t := range doc.Types {
+			if strings.EqualFold(name, t.Name) {
+				msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
+				if len(t.Comments) > 0 {
+					msg += t.Comments[0]
+				} else {
+					msg += "*no information available*\n"
+				}
+			}
+		}
+	}
+
+	if msg == "" {
+		return errResponse("No type or function `%s` found in package `%s`", name, pkg)
 	}
 	if len(msg) > 2000 {
 		msg = fmt.Sprintf("%s\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
 	}
 	return &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s: func %s", pkg, name),
+		Title:       fmt.Sprintf("%s: %s", pkg, name),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: fmt.Sprintf("%v#%v", doc.URL, name),
