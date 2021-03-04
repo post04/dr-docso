@@ -43,14 +43,15 @@ type Type struct {
 }
 
 type Doc struct {
+	URL       string     `json:"url"`
 	Name      string     `json:"name"`
 	Types     []Type     `json:"types"`
 	Functions []Function `json:"functions"`
 }
 
 // GetDoc returns a document representing the specified package/module.
-func GetDoc(repo string) (*Doc, error) {
-	resp, err := http.Get(BASE + repo)
+func GetDoc(pkg string) (*Doc, error) {
+	resp, err := http.Get(BASE + pkg)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,8 @@ func GetDoc(repo string) (*Doc, error) {
 		types = append(types, t)
 	})
 	return &Doc{
-		Name:      repo,
+		URL:       BASE + pkg,
+		Name:      pkg,
 		Functions: funcs,
 		Types:     types,
 	}, nil

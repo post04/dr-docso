@@ -174,6 +174,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 }
 
+// getDoc is a wrapper for docs.GetDoc that also implements caching for stdlib packages.
 func getDoc(pkg string) (*docs.Doc, error) {
 	var err error
 	doc, ok := StdlibCache[pkg]
