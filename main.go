@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	cmd "github.com/postrequest69/dr-docso/bot"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 func ready(session *discordgo.Session, evt *discordgo.Ready) {
 	fmt.Printf("Logged in under: %v:%v\n", evt.User.Username, evt.User.Discriminator)
 	session.UpdateGameStatus(0, fmt.Sprintf("%vhelp for information!", c.Prefix))
-	go checkListeners()
+	go cmd.CheckListeners()
 }
 
 func getConfig() {
@@ -36,16 +37,18 @@ func getConfig() {
 
 func main() {
 	getConfig()
-	docsCommandHelpEmbed.Description = fmt.Sprintf("__**Examples:**__ \n%vdocs strings\n%vdocs strings equalsfold\n%vdocs strings types builder\n%vdocs strings functions equalsfold", c.Prefix, c.Prefix, c.Prefix, c.Prefix)
+	cmd.DocsHelpEmbed.Description = fmt.Sprintf("__**Examples:**__ \n%vdocs strings\n%vdocs strings equalsfold\n%vdocs strings types builder\n%vdocs strings functions equalsfold", c.Prefix, c.Prefix, c.Prefix, c.Prefix)
 	bot, err := discordgo.New("Bot " + c.Token)
 	if err != nil {
 		log.Fatal("ERROR LOGGING IN", err)
 	}
 	bot.AddHandler(ready)
-	bot.AddHandler(reactionListen)
+	bot.AddHandler(cmd.ReactionListen)
 
 	commandHandlerStruct := New(c.Prefix, true)
-	commandHandlerStruct.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev!", DocsCommand)
+	commandHandlerStruct.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev!", cmd.HandleDoc)
+	commandHandlerStruct.AddCommand("getfuncs", "{prefix}getfuncs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev!", cmd.FuncsPages)
+	commandHandlerStruct.AddCommand("gettypes", "{prefix}gettypes github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev!", cmd.TypesPages)
 	bot.AddHandler(commandHandlerStruct.OnMessage)
 	err = bot.Open()
 	if err != nil {

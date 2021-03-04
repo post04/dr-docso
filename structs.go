@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/postrequest69/dr-docso/docs"
 )
 
 // Command - Command struct
@@ -28,14 +27,4 @@ type Config struct {
 	MainGuild      string   `json:"mainGuild"`
 	LockedChannels []string `json:"lockedChannels"`
 	SafeMode       bool     `json:"safeMode"`
-}
-
-// ReactionListener is a struct for the reaction listener for pages
-type ReactionListener struct {
-	Type        string
-	CurrentPage int
-	PageLimit   int
-	UserID      string
-	Data        *docs.Doc
-	LastUsed    int64 // use uint64 maybe?
 }

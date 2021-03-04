@@ -5,39 +5,14 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	bot "github.com/postrequest69/dr-docso/bot"
 	"github.com/postrequest69/dr-docso/docs"
 )
-
-func formatForMessage(page *ReactionListener) string {
-	s := ""
-	max := page.CurrentPage*10 - 1
-	min := max - 9
-	curr := min
-	if page.Type == "functions" {
-		if max > len(page.Data.Functions) {
-			max = len(page.Data.Functions)
-		}
-		for _, function := range page.Data.Functions[min:max] {
-			curr++
-			s += fmt.Sprintf("\n%v.) %v", curr, function.Name)
-		}
-	}
-	if page.Type == "types" {
-		if max > len(page.Data.Types) {
-			max = len(page.Data.Types)
-		}
-		for _, dType := range page.Data.Types[min:max] {
-			curr++
-			s += fmt.Sprintf("\n%v.) %v", curr, dType.Name)
-		}
-	}
-	return s
-}
 
 // DocsCommand is the discord command for viewing documentation from discord!
 func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, arguments []string, prefix string) {
 	if len(arguments) < 1 {
-		session.ChannelMessageSendEmbed(msg.ChannelID, docsCommandHelpEmbed)
+		session.ChannelMessageSendEmbed(msg.ChannelID, bot.DocsHelpEmbed)
 		return
 	}
 
@@ -70,61 +45,6 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 			session.ChannelMessageSend(msg.ChannelID, "It seems this package doesn't exist according to pkg.go.dev!")
 			return
 		}
-		// THIS IS FOR REACTION PAGES COMMAND BTW LOL
-		// if arg == "functions" {
-		// 	var pageLimit = int(math.Ceil(float64(len(doc.Functions)) / 10.0))
-		// 	var page = &ReactionListener{
-		// 		Type:        "functions",
-		// 		CurrentPage: 1,
-		// 		PageLimit:   pageLimit,
-		// 		UserID:      msg.Author.ID,
-		// 		Data:        doc,
-		// 		LastUsed:    MakeTimestamp(),
-		// 	}
-		// 	textTosend := formatForMessage(page)
-		// 	m, err := session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
-		// 		Title:       "functions",
-		// 		Description: textTosend,
-		// 		Footer: &discordgo.MessageEmbedFooter{
-		// 			Text: "Page 1/" + fmt.Sprint(pageLimit),
-		// 		},
-		// 	})
-		// 	if err != nil {
-		// 		return
-		// 	}
-		// 	session.MessageReactionAdd(m.ChannelID, m.ID, leftArrow)
-		// 	session.MessageReactionAdd(m.ChannelID, m.ID, rightArrow)
-		// 	session.MessageReactionAdd(m.ChannelID, m.ID, destroyEmoji)
-		// 	pageListeners[m.ID] = page
-		// 	return
-		// }
-		// if arg == "types" {
-		// 	var pageLimit = int(math.Ceil(float64(len(doc.Types)) / 10.0))
-		// 	var page = &ReactionListener{
-		// 		Type:        "types",
-		// 		CurrentPage: 1,
-		// 		PageLimit:   pageLimit,
-		// 		UserID:      msg.Author.ID,
-		// 		Data:        doc,
-		// 		LastUsed:    MakeTimestamp(),
-		// 	}
-		// 	textTosend := formatForMessage(page)
-		// 	m, err := session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
-		// 		Title:       "types",
-		// 		Description: textTosend,
-		// 		Footer: &discordgo.MessageEmbedFooter{
-		// 			Text: "Page 1/" + fmt.Sprint(pageLimit),
-		// 		},
-		// 	})
-		// 	if err != nil {
-		// 		return
-		// 	}
-		// 	session.MessageReactionAdd(m.ChannelID, m.ID, leftArrow)
-		// 	session.MessageReactionAdd(m.ChannelID, m.ID, rightArrow)
-		// 	session.MessageReactionAdd(m.ChannelID, m.ID, destroyEmoji)
-		// 	pageListeners[m.ID] = page
-		// 	return
-		// }
 		name := arguments[1]
 		var s string
 		for _, function := range doc.Functions {
@@ -156,7 +76,7 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 	if len(arguments) == 3 {
 		arg := strings.ToLower(arguments[1])
 		if arg != "function" && arg != "type" {
-			session.ChannelMessageSendEmbed(msg.ChannelID, docsCommandHelpEmbed)
+			session.ChannelMessageSendEmbed(msg.ChannelID, bot.DocsHelpEmbed)
 			return
 		}
 		doc, err := docs.GetDoc(arguments[0])
@@ -221,7 +141,7 @@ func DocsCommand(session *discordgo.Session, msg *discordgo.MessageCreate, argum
 		}
 	}
 	if len(arguments) > 3 {
-		session.ChannelMessageSendEmbed(msg.ChannelID, docsCommandHelpEmbed)
+		session.ChannelMessageSendEmbed(msg.ChannelID, bot.DocsHelpEmbed)
 		return
 	}
 }

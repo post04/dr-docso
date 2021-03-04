@@ -1,10 +1,11 @@
-package main
+package bot
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/postrequest69/dr-docso/docs"
 )
 
 const (
@@ -13,6 +14,16 @@ const (
 	rightArrow   = "➡️"
 	destroyEmoji = "❌"
 )
+
+// ReactionListener is a struct for the reaction listener for pages
+type ReactionListener struct {
+	Type        string
+	CurrentPage int
+	PageLimit   int
+	UserID      string
+	Data        *docs.Doc
+	LastUsed    int64 // use uint64 maybe?
+}
 
 var (
 	pageListeners = make(map[string]*ReactionListener)
@@ -23,7 +34,8 @@ func MakeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func checkListeners() {
+// CheckListeners - checks all active reaction listeners and kills inactive ones
+func CheckListeners() {
 	for {
 		time.Sleep(6 * time.Minute)
 		now := MakeTimestamp()
@@ -35,8 +47,34 @@ func checkListeners() {
 	}
 }
 
-// here is where we listen for reactions (for the pages)
-func reactionListen(session *discordgo.Session, reaction *discordgo.MessageReactionAdd) {
+func formatForMessage(page *ReactionListener) string {
+	s := ""
+	max := page.CurrentPage * 10
+	min := max - 9
+	curr := min
+	if page.Type == "functions" {
+		if max > len(page.Data.Functions) {
+			max = len(page.Data.Functions)
+		}
+		for _, function := range page.Data.Functions[min:max] {
+			curr++
+			s += fmt.Sprintf("\n%v.) %v", curr, function.Name)
+		}
+	}
+	if page.Type == "types" {
+		if max > len(page.Data.Types) {
+			max = len(page.Data.Types)
+		}
+		for _, dType := range page.Data.Types[min:max] {
+			curr++
+			s += fmt.Sprintf("\n%v.) %v", curr, dType.Name)
+		}
+	}
+	return s
+}
+
+// ReactionListen - here is where we listen for reactions (for the pages)
+func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReactionAdd) {
 	// if the message being reacted to is in the reaction map
 	if _, ok := pageListeners[reaction.MessageID]; ok {
 		// validating that the user reacting is indeed the user that owns the listener

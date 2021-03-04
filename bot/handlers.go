@@ -2,13 +2,20 @@ package bot
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/postrequest69/dr-docso/docs"
 )
 
-func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate) {
+// DocsHelpEmbed - the embed to give help to the docs command.
+var DocsHelpEmbed = &discordgo.MessageEmbed{
+	Title: "Docs help!",
+}
+
+// HandleDoc - Here is the replacement for the current system
+func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
 	var msg *discordgo.MessageEmbed
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
@@ -138,18 +145,19 @@ func typeResponse(pkg, name string) *discordgo.MessageEmbed {
 }
 
 func helpShortResponse() *discordgo.MessageEmbed {
-	// TODO: implement this
-	return nil
+	return DocsHelpEmbed
 }
 
 func pkgResponse(pkg string) *discordgo.MessageEmbed {
-	// doc, err
-	_, err := getDoc(pkg)
+	doc, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("An error occured when requesting the page for the package `%s`", pkg)
 	}
-	// TODO: implement this
-	return nil
+	embed := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("Info for %s", pkg),
+		Description: fmt.Sprintf("Types: %v\nFunctions:%v", len(doc.Types), len(doc.Functions)),
+	}
+	return embed
 }
 
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
@@ -209,4 +217,107 @@ func getDoc(pkg string) (*docs.Doc, error) {
 		StdlibCache[pkg] = doc
 	}
 	return doc, nil
+}
+
+// PagesShortResponse - basically just a help command for the pages system :p
+func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("Help %v", state),
+		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example!\n\n%v%v strings", prefix, state),
+	}
+}
+
+// FuncsPages - for the reaction pages with all the functions in a package!
+func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
+	fields := strings.Fields(m.Content)
+	switch len(fields) {
+	case 0: // probably impossible
+		return
+	case 1: // send a help command here
+		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
+		return
+	case 2: // command + pkg (send page if possible)
+		//TODO impl this
+		doc, err := getDoc(fields[1])
+		if err != nil || doc == nil {
+			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
+			return
+		}
+		var pageLimit = int(math.Ceil(float64(len(doc.Functions)) / 10.0))
+		var page = &ReactionListener{
+			Type:        "functions",
+			CurrentPage: 1,
+			PageLimit:   pageLimit,
+			UserID:      m.Author.ID,
+			Data:        doc,
+			LastUsed:    MakeTimestamp(),
+		}
+		textTosend := formatForMessage(page)
+		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Title:       "functions",
+			Description: textTosend,
+			Footer: &discordgo.MessageEmbedFooter{
+				Text: "Page 1/" + fmt.Sprint(pageLimit),
+			},
+		})
+		if err != nil {
+			return
+		}
+		s.MessageReactionAdd(m.ChannelID, m.ID, leftArrow)
+		s.MessageReactionAdd(m.ChannelID, m.ID, rightArrow)
+		s.MessageReactionAdd(m.ChannelID, m.ID, destroyEmoji)
+		pageListeners[m.ID] = page
+		return
+	default: // too many arguments
+		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
+		return
+	}
+
+}
+
+// TypesPages - for the reaction pages with all the types in a package!
+func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
+	fields := strings.Fields(m.Content)
+	switch len(fields) {
+	case 0: // probably impossible
+		return
+	case 1: // send a help command here
+		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
+		return
+	case 2: // command + pkg (send page if possible)
+		//TODO impl this
+		doc, err := getDoc(fields[1])
+		if err != nil || doc == nil {
+			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
+			return
+		}
+		var pageLimit = int(math.Ceil(float64(len(doc.Types)) / 10.0))
+		var page = &ReactionListener{
+			Type:        "types",
+			CurrentPage: 1,
+			PageLimit:   pageLimit,
+			UserID:      m.Author.ID,
+			Data:        doc,
+			LastUsed:    MakeTimestamp(),
+		}
+		textTosend := formatForMessage(page)
+		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Title:       "types",
+			Description: textTosend,
+			Footer: &discordgo.MessageEmbedFooter{
+				Text: "Page 1/" + fmt.Sprint(pageLimit),
+			},
+		})
+		if err != nil {
+			return
+		}
+		s.MessageReactionAdd(m.ChannelID, m.ID, leftArrow)
+		s.MessageReactionAdd(m.ChannelID, m.ID, rightArrow)
+		s.MessageReactionAdd(m.ChannelID, m.ID, destroyEmoji)
+		pageListeners[m.ID] = page
+		return
+	default: // too many arguments
+		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
+		return
+	}
 }
