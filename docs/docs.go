@@ -3,7 +3,6 @@ package docs
 import (
 	"net/http"
 	"regexp"
-	"strings"
 	"unicode"
 
 	"github.com/PuerkitoBio/goquery"
@@ -142,16 +141,12 @@ func GetDoc(pkg string) (*Doc, error) {
 // extractType extracts the type from a method definition
 // i.e, `t *Type` -> `Type`
 func extractType(s string) string {
-	var buff strings.Builder
-	r := []rune(s)
-	for i := len(r) - 1; i >= 0; i-- {
-		if unicode.IsSpace(r[i]) {
-			break
+
+	for i := len(s) - 1; i >= 0; i-- {
+		if unicode.IsSpace(rune(s[i])) ||
+			s[i] == '*' {
+			return s[i+1:]
 		}
-		if r[i] == '*' {
-			break
-		}
-		buff.WriteRune(r[i])
 	}
-	return buff.String()
+	return s
 }
