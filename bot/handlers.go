@@ -174,12 +174,12 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 
 	var msg string
-
+	var hyper string
 	for _, fn := range doc.Functions {
 		if fn.Type == docs.FnMethod &&
 			strings.EqualFold(fn.Name, name) &&
 			strings.EqualFold(fn.MethodOf, t) {
-			name = fn.Name
+			hyper = fmt.Sprintf("%v#%v.%v", doc.URL, fn.MethodOf, fn.Name)
 			msg += fmt.Sprintf("`%s`", fn.Signature)
 			if len(fn.Comments) > 0 {
 				msg += fmt.Sprintf("\n%s", fn.Comments[0])
@@ -201,7 +201,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("%v#%v", doc.URL, name),
+			Text: hyper,
 		},
 	}
 }
