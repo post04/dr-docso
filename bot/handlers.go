@@ -14,7 +14,7 @@ var DocsHelpEmbed = &discordgo.MessageEmbed{
 	Title: "Docs help!",
 }
 
-// HandleDoc - Here is the replacement for the current system
+// HandleDoc  is the handler for the doc command.
 func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
 	var msg *discordgo.MessageEmbed
 	fields := strings.Fields(m.Content)
@@ -204,24 +204,6 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 			Text: hyper,
 		},
 	}
-}
-
-// getDoc is a wrapper for docs.GetDoc that also implements caching for stdlib packages.
-func getDoc(pkg string) (*docs.Doc, error) {
-	var err error
-	doc, ok := StdlibCache[pkg]
-	if !ok || doc == nil {
-		doc, err = docs.GetDoc(pkg)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// cache the stdlib pkg
-	if ok && doc != nil {
-		StdlibCache[pkg] = doc
-	}
-	return doc, nil
 }
 
 // PagesShortResponse - basically just a help command for the pages system :p

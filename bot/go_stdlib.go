@@ -1,8 +1,32 @@
 // Code generated, do not edit
 package bot
 
-import "github.com/post04/dr-docso/docs"
+import (
+	"github.com/post04/dr-docso/docs"
+	"sync"
+)
 
+// getDoc is a wrapper for docs.GetDoc that also implements caching for stdlib packages.
+func getDoc(pkg string) (*docs.Doc, error) {
+	var err error
+	doc, ok := StdlibCache[pkg]
+	if !ok || doc == nil {
+		doc, err = docs.GetDoc(pkg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// cache the stdlib pkg
+	if ok && doc != nil {
+		mux.Lock()
+		StdlibCache[pkg] = doc
+		mux.Unlock()
+	}
+	return doc, nil
+}
+
+var mux sync.Mutex
 var StdlibCache = map[string]*docs.Doc{
 	"bufio":                                 nil,
 	"context":                               nil,
