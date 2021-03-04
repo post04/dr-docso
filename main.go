@@ -19,7 +19,7 @@ var (
 )
 
 func ready(session *discordgo.Session, evt *discordgo.Ready) {
-	fmt.Printf("Logged in under: %v:%v\n", evt.User.Username, evt.User.Discriminator)
+	fmt.Printf("Logged in under: %v#%v\n", evt.User.Username, evt.User.Discriminator)
 	session.UpdateGameStatus(0, fmt.Sprintf("%vhelp for information!", c.Prefix))
 	go cmd.CheckListeners()
 }
