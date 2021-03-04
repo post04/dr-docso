@@ -71,6 +71,7 @@ func funcResponse(pkg, name string) *discordgo.MessageEmbed {
 	for _, fn := range doc.Functions {
 		if fn.Type == docs.FnNormal && strings.EqualFold(fn.Name, name) {
 			// match found
+			name = fn.Name
 			msg += fmt.Sprintf("`%s`", fn.Signature)
 			if len(fn.Comments) > 0 {
 				msg += fmt.Sprintf("\n%s", fn.Comments[0])
@@ -93,7 +94,7 @@ func funcResponse(pkg, name string) *discordgo.MessageEmbed {
 		Title:       fmt.Sprintf("%s: func %s", pkg, name),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: doc.URL,
+			Text: fmt.Sprintf("%v#%v", doc.URL, name),
 		},
 	}
 }
@@ -119,6 +120,9 @@ func typeResponse(pkg, name string) *discordgo.MessageEmbed {
 	for _, t := range doc.Types {
 		if strings.EqualFold(t.Name, name) {
 			// got a match
+
+			// To get the hyper link (case it's case sensitive)
+			name = t.Name
 			msg += fmt.Sprintf("```go\n%s\n```", t.Signature)
 			if len(t.Comments) > 0 {
 				msg += fmt.Sprintf("\n%s", t.Comments[0])
@@ -139,7 +143,7 @@ func typeResponse(pkg, name string) *discordgo.MessageEmbed {
 		Title:       fmt.Sprintf("%s: type %s", pkg, name),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: doc.URL,
+			Text: fmt.Sprintf("%v#%v", doc.URL, name),
 		},
 	}
 }
@@ -175,6 +179,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 		if fn.Type == docs.FnMethod &&
 			strings.EqualFold(fn.Name, name) &&
 			strings.EqualFold(fn.MethodOf, t) {
+			name = fn.Name
 			msg += fmt.Sprintf("`%s`", fn.Signature)
 			if len(fn.Comments) > 0 {
 				msg += fmt.Sprintf("\n%s", fn.Comments[0])
@@ -196,7 +201,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: doc.URL,
+			Text: fmt.Sprintf("%v#%v", doc.URL, name),
 		},
 	}
 }
