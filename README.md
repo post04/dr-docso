@@ -4,7 +4,7 @@ A discord bot to fetch and look at a packages documentation from pkg.go.dev thro
 # TODO
 
 - [ ] Make the embeds look much better
-- [ ] Make another command to list all functions/types in a package
+- [-] Make another command to list all functions/types in a package
 - [ ] Overall clean up the files and add more comments
 - [ ] GuildLocking option
 
