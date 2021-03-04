@@ -49,6 +49,7 @@ func (c *compiler) peek() rune {
 
 func (c *compiler) compile() string {
 	var buff strings.Builder
+	buff.WriteString("(?i)^")
 LOOP:
 	for {
 		switch c.ch {
@@ -69,5 +70,6 @@ LOOP:
 		}
 		c.read()
 	}
+	buff.WriteRune('$')
 	return buff.String()
 }
