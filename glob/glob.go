@@ -8,7 +8,7 @@ import (
 var replacer = strings.NewReplacer(
 	"*", "[a-zA-Z0-9_]*",
 	".", "\\.",
-	"?", ".?",
+	"?", "[a-zA-Z0-9_]?",
 )
 
 func Compile(s string) (*regexp.Regexp, error) {
