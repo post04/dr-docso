@@ -19,11 +19,21 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case 2: // invocation + arg
 		msg = pkgResponse(fields[1])
 	case 3: // invocation + pkg + func
-		msg = funcResponse(fields[1], fields[2])
+		if strings.Contains(fields[2], ".") {
+			split := strings.Split(fields[2], ".")
+			msg = methodResponse(fields[1], split[0], split[1])
+		} else {
+			msg = funcResponse(fields[1], fields[2])
+		}
 	case 4:
 		switch strings.ToLower(fields[2]) {
 		case "func", "function", "fn":
-			msg = funcResponse(fields[1], fields[3])
+			if strings.Contains(fields[3], ".") {
+				split := strings.Split(fields[3], ".")
+				msg = methodResponse(fields[1], split[0], split[1])
+			} else {
+				msg = funcResponse(fields[1], fields[3])
+			}
 		case "type":
 			msg = typeResponse(fields[1], fields[3])
 		default:
@@ -52,7 +62,7 @@ func funcResponse(pkg, name string) *discordgo.MessageEmbed {
 
 	// TODO(note): maybe use levenshtein here?
 	for _, fn := range doc.Functions {
-		if strings.EqualFold(fn.Name, name) {
+		if fn.Type == docs.FnNormal && strings.EqualFold(fn.Name, name) {
 			// match found
 			msg += fmt.Sprintf("`%s`", fn.Signature)
 			if len(fn.Comments) > 0 {
