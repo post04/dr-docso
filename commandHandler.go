@@ -44,10 +44,8 @@ func (handler *CommandHandler) GenHelp() {
 		}
 		desc = append(desc, name)
 	}
-	fmt.Println(longestCommand)
 	for pos, descPiece := range desc {
 		spaces := " "
-		fmt.Println(descPiece)
 		if len(descPiece) < longestCommand {
 			spaces = strings.Repeat(" ", longestCommand-len(descPiece)+1)
 		}
