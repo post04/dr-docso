@@ -46,8 +46,8 @@ func main() {
 
 	cmdhandler := New(c.Prefix, true)
 	cmdhandler.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev", cmd.HandleDoc)
-	cmdhandler.AddCommand("getfuncs", "{prefix}getfuncs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev", cmd.HandleFuncsPages)
-	cmdhandler.AddCommand("gettypes", "{prefix}gettypes github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev", cmd.HandleTypesPages)
+	cmdhandler.AddCommand("funcs", "{prefix}funcs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev", cmd.HandleFuncsPages)
+	cmdhandler.AddCommand("types", "{prefix}types github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev", cmd.HandleTypesPages)
 	cmdhandler.GenHelp()
 	bot.AddHandler(cmdhandler.OnMessage)
 	err = bot.Open()
