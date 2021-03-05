@@ -37,7 +37,7 @@ func getConfig() {
 
 func main() {
 	getConfig()
-	cmd.DocsHelpEmbed.Description = fmt.Sprintf("__**Examples:**__ \n%vdocs strings\n%vdocs strings equalsfold\n%vdocs strings types builder\n%vdocs strings functions equalsfold", c.Prefix, c.Prefix, c.Prefix, c.Prefix)
+	cmd.DocsHelpEmbed.Description = fmt.Sprintf("__**Examples:**__ \n%vdocs strings\n%vdocs strings equalsfold\n%vdocs strings builder\n%vdocs strings builder.*\n%vdocs strings *.writestring", c.Prefix, c.Prefix, c.Prefix, c.Prefix, c.Prefix)
 	bot, err := discordgo.New("Bot " + c.Token)
 	if err != nil {
 		log.Fatal("ERROR LOGGING IN", err)
