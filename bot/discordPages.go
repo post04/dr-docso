@@ -29,12 +29,12 @@ var (
 	pageListeners = make(map[string]*ReactionListener)
 )
 
-// MakeTimestamp - makes a ms timestamp
+// MakeTimestamp makes an ms timestamp
 func MakeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-// CheckListeners - checks all active reaction listeners and kills inactive ones
+// CheckListeners checks all active reaction listeners and kills inactive ones
 func CheckListeners() {
 	for {
 		time.Sleep(6 * time.Minute)
@@ -72,7 +72,7 @@ func formatForMessage(page *ReactionListener) string {
 	return s
 }
 
-// ReactionListen - here is where we listen for reactions (for the pages)
+// ReactionListen listens for the reactions for a previously sent embed.
 func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReactionAdd) {
 	// if the message being reacted to is in the reaction map
 	if _, ok := pageListeners[reaction.MessageID]; ok {

@@ -9,7 +9,7 @@ import (
 	"github.com/post04/dr-docso/glob"
 )
 
-// DocsHelpEmbed - the embed to give help to the docs command.
+// DocsHelpEmbed is the help for the docs command.
 var DocsHelpEmbed = &discordgo.MessageEmbed{
 	Title: "Docs help",
 }
@@ -42,8 +42,9 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 	s.ChannelMessageSendEmbed(m.ChannelID, msg)
 }
 
-// queryResponse - when the user is requesting a method or type plainly
-// Example: .docs strings equalfold or .docs strings builder
+// queryResponse generates the response for a query.
+//
+// i.e, `.docs strings Builder`
 func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	doc, err := getDoc(pkg)
 	if err != nil {
@@ -95,7 +96,7 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 }
 
-// errResponse - for general error embeds.
+// errResponse is like fmt.Sprintf, formats a message and returns an embed.
 func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       "Error",
@@ -103,13 +104,12 @@ func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
 	}
 }
 
-// helpShortResponse - returns the docs command's help embed
+// helpShortResponse returns the docs command's help embed.
 func helpShortResponse() *discordgo.MessageEmbed {
 	return DocsHelpEmbed
 }
 
-// pkgResponse - general package deatils reponse
-// Example: .docs strings
+// pkgResponse generates an embed with general information about a package.
 func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	doc, err := getDoc(pkg)
 	if err != nil {
@@ -126,8 +126,9 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	return embed
 }
 
-// methodResponse - response if the requested thing is a method
-// Example: .docs strings builder.writestring or .docs strings builder.*
+// methodResponse generates an embed for a method query.
+//
+// i.e, `.docs regexp Regexp.Match`
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	if strings.Contains(t, "*") ||
 		strings.Contains(name, "*") {
@@ -175,7 +176,6 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 }
 
-// PagesShortResponse - basically just a help command for the pages system :p
 func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Help %v", state),
@@ -183,7 +183,7 @@ func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	}
 }
 
-// FuncsPages - for the reaction pages with all the functions in a package!
+// TODO: rename to HandleFuncsPages and add a good comment.
 func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
@@ -232,7 +232,7 @@ func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 
 }
 
-// TypesPages - for the reaction pages with all the types in a package!
+// TODO: rename to HandleTypesPages and add a good coment.
 func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
@@ -280,6 +280,7 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 	}
 }
 
+// methodGlobResponse generates an embed for a glob pattern describing type.method.
 func methodGlobResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	reT, err := glob.Compile(t)
 	if err != nil {
