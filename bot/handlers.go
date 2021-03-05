@@ -183,8 +183,8 @@ func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	}
 }
 
-// TODO: rename to HandleFuncsPages and add a good comment.
-func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
+// HandleFuncsPages is the handler fo the getfuncs command
+func HandleFuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
 	case 0: // probably impossible
@@ -232,8 +232,8 @@ func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 
 }
 
-// TODO: rename to HandleTypesPages and add a good coment.
-func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
+// HandleTypesPages is the handler fo the gettypes command
+func HandleTypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
 	case 0: // probably impossible
