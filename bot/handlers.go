@@ -46,6 +46,9 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 //
 // i.e, `.docs strings Builder`
 func queryResponse(pkg, name string) *discordgo.MessageEmbed {
+	if strings.Contains(name, "*") {
+		return queryGlobResponse(pkg, name)
+	}
 	doc, err := getDoc(pkg)
 	if err != nil {
 		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
@@ -320,6 +323,57 @@ func methodGlobResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       "Matches",
+		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
+	}
+}
+
+// queryGlobResponse is the same as queryResponse but it allows globbing.
+func queryGlobResponse(pkg, name string) *discordgo.MessageEmbed {
+	r, err := glob.Compile(name)
+	if err != nil {
+		return errResponse("error parsing glob pattern")
+	}
+	doc, err := getDoc(pkg)
+	if err != nil {
+		return errResponse("Error while fetching the page for the package `%s`", pkg)
+	}
+
+	var msg string
+	for _, fn := range doc.Functions {
+		if fn.Type == docs.FnNormal &&
+			r.MatchString(fn.Name) {
+			msg += fmt.Sprintf("`%s`\n", fn.Signature)
+			if len(fn.Comments) > 0 {
+				msg += fn.Comments[0]
+			} else {
+				msg += "*no information available*"
+			}
+		}
+	}
+
+	for _, t := range doc.Types {
+		if r.MatchString(t.Name) {
+			msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
+			if len(t.Comments) > 0 {
+				msg += t.Comments[0]
+			} else {
+				msg += "*no information available*"
+			}
+		}
+	}
+
+	if msg == "" {
+		return errResponse("No matches found for the pattern `%s` in package `%s`", name, pkg)
+	}
+
+	if len(msg) > 2000 {
+		msg = fmt.Sprintf("%s...\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
+	}
+	return &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("Matches for `%s` in package %s", name, pkg),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: doc.URL,
