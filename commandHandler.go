@@ -7,7 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// New Registers a new commandhandler
+// New creates an initialized commandhandler
 func New(prefix string, ignoreBots bool) *CommandHandler {
 	return &CommandHandler{
 		Prefix:     prefix,
@@ -26,13 +26,13 @@ func (handler *CommandHandler) AddCommand(name string, help string, description 
 	}
 }
 
-// GenHelp makes the help command embed so it wont be generated every time the command is used
+// GenHelp generates the help command output.
 func (handler *CommandHandler) GenHelp() {
 	embed := &discordgo.MessageEmbed{
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("Reminder: You can define a command to get help with like %s help commandName", handler.Prefix),
+			Text: fmt.Sprintf("Use %shelp commandName to get more info about a command", handler.Prefix),
 		},
-		Title:       "Showing all possible commands!",
+		Title:       "Available commands",
 		Description: "```autoit\n",
 	}
 
@@ -44,14 +44,16 @@ func (handler *CommandHandler) GenHelp() {
 		}
 		desc = append(desc, name)
 	}
-	for pos, descPiece := range desc {
-		spaces := " "
-		if len(descPiece) < longestCommand {
-			spaces = strings.Repeat(" ", longestCommand-len(descPiece)+1)
+	spaces := " "
+	for _, cmdName := range desc {
+		spaces = " "
+		if len(cmdName) < longestCommand {
+			spaces = strings.Repeat(" ", longestCommand-len(cmdName)+1)
 		}
-		desc[pos] = fmt.Sprintf("%v%v%v#%v", handler.Prefix, descPiece, spaces, handler.Commands[descPiece].Description)
+		embed.Description += fmt.Sprintf("%s%s%s#%s\n", handler.Prefix, cmdName, spaces, handler.Commands[cmdName].Description)
 	}
-	embed.Description += strings.Join(desc, "\n") + "```"
+
+	embed.Description += "```"
 	handler.HelpCommand = embed
 }
 

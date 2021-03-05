@@ -1,17 +1,13 @@
 package main
 
-import (
-	"github.com/bwmarrin/discordgo"
-)
+import "github.com/bwmarrin/discordgo"
 
-// Command - Command struct
 type Command struct {
 	Help        string
 	Description string
 	Run         func(session *discordgo.Session, msg *discordgo.MessageCreate, prefix string)
 }
 
-// CommandHandler lol
 type CommandHandler struct {
 	Prefix            string
 	Commands          map[string]*Command
@@ -21,7 +17,6 @@ type CommandHandler struct {
 	HelpCommand       *discordgo.MessageEmbed
 }
 
-// Config config struct
 type Config struct {
 	Prefix         string   `json:"prefix"`
 	Token          string   `json:"token"`
