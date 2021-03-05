@@ -16,7 +16,7 @@ var DocsHelpEmbed = &discordgo.MessageEmbed{
 }
 
 // HandleDoc  is the handler for the doc command.
-func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
+func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	var msg *discordgo.MessageEmbed
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
@@ -43,6 +43,8 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, arguments []str
 	s.ChannelMessageSendEmbed(m.ChannelID, msg)
 }
 
+// queryResponse - when the user is requesting a method or type plainly
+// Example: .docs strings equalfold or .docs strings builder
 func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	doc, err := getDoc(pkg)
 	if err != nil {
@@ -94,6 +96,7 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 }
 
+// errResponse - for general error embeds.
 func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       "Error",
@@ -101,52 +104,13 @@ func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
 	}
 }
 
-func typeResponse(pkg, name string) *discordgo.MessageEmbed {
-	doc, err := getDoc(pkg)
-	if err != nil {
-		return errResponse("An error occurred while getting the page for the package `%s`", pkg)
-	}
-	if len(doc.Types) == 0 {
-		return errResponse("Package `%s` seems to have no type definitions", pkg)
-	}
-
-	var msg string
-
-	for _, t := range doc.Types {
-		if strings.EqualFold(t.Name, name) {
-			// got a match
-
-			// To get the hyper link (case it's case sensitive)
-			name = t.Name
-			msg += fmt.Sprintf("```go\n%s\n```", t.Signature)
-			if len(t.Comments) > 0 {
-				msg += fmt.Sprintf("\n%s", t.Comments[0])
-			} else {
-				msg += "\n*no information*"
-			}
-		}
-	}
-
-	if msg == "" {
-		return errResponse("Package `%s` does not have type `%s`", pkg, name)
-	}
-	if len(msg) > 2000 {
-		msg = fmt.Sprintf("%s\n\n*note: the message is trimmed to fit the 2k character limit*", msg[:1950])
-	}
-
-	return &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s: type %s", pkg, name),
-		Description: msg,
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("%v#%v", doc.URL, name),
-		},
-	}
-}
-
+// helpShortResponse - returns the docs command's help embed
 func helpShortResponse() *discordgo.MessageEmbed {
 	return DocsHelpEmbed
 }
 
+// pkgResponse - general package deatils reponse
+// Example: .docs strings
 func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	doc, err := getDoc(pkg)
 	if err != nil {
@@ -163,6 +127,8 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	return embed
 }
 
+// methodResponse - response if the requested thing is a method
+// Example: .docs strings builder.writestring or .docs strings builder.*
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	if strings.Contains(t, "*") ||
 		strings.Contains(name, "*") {
@@ -219,7 +185,7 @@ func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 }
 
 // FuncsPages - for the reaction pages with all the functions in a package!
-func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
+func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
 	case 0: // probably impossible
@@ -228,7 +194,6 @@ func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []st
 		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
 		return
 	case 2: // command + pkg (send page if possible)
-		//TODO impl this
 		doc, err := getDoc(fields[1])
 		if err != nil || doc == nil {
 			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
@@ -267,7 +232,7 @@ func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []st
 }
 
 // TypesPages - for the reaction pages with all the types in a package!
-func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []string, prefix string) {
+func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
 	fields := strings.Fields(m.Content)
 	switch len(fields) {
 	case 0: // probably impossible
@@ -276,7 +241,6 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, arguments []st
 		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("gettypes", prefix))
 		return
 	case 2: // command + pkg (send page if possible)
-		//TODO impl this
 		doc, err := getDoc(fields[1])
 		if err != nil || doc == nil {
 			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))

@@ -17,7 +17,7 @@ func New(prefix string, ignoreBots bool) *CommandHandler {
 }
 
 // AddCommand adds a new command to command handler
-func (handler *CommandHandler) AddCommand(name string, help string, description string, commandHandler func(s *discordgo.Session, m *discordgo.MessageCreate, args []string, prefix string)) {
+func (handler *CommandHandler) AddCommand(name string, help string, description string, commandHandler func(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)) {
 	help = strings.ReplaceAll(help, "{prefix}", handler.Prefix)
 	handler.Commands[name] = &Command{
 		Run:         commandHandler,
@@ -98,7 +98,7 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 	} else {
 		if command, ok := handler.Commands[strings.ToLower(parts[0][len(handler.Prefix):])]; ok {
 			fmt.Println(parts[0][len(handler.Prefix):] + " command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
-			go command.Run(session, msg, parts[1:], handler.Prefix)
+			go command.Run(session, msg, handler.Prefix)
 		}
 	}
 }

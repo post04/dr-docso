@@ -8,7 +8,7 @@ import (
 type Command struct {
 	Help        string
 	Description string
-	Run         func(session *discordgo.Session, msg *discordgo.MessageCreate, args []string, prefix string)
+	Run         func(session *discordgo.Session, msg *discordgo.MessageCreate, prefix string)
 }
 
 // CommandHandler lol
