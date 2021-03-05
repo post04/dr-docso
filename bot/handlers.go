@@ -116,13 +116,13 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	if err != nil {
 		return errResponse("An error occured when requesting the page for the package `%s`", pkg)
 	}
-	overview := doc.Overview
-	if overview == "" {
-		overview = "None"
-	}
+
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Info for %s", pkg),
-		Description: fmt.Sprintf("Types: %v\nFunctions:%v\nOverview:%v", len(doc.Types), len(doc.Functions), overview),
+		Description: fmt.Sprintf("Types: %v\nFunctions:%v", len(doc.Types), len(doc.Functions)),
+	}
+	if doc.Overview != "" {
+		embed.Description += fmt.Sprintf("\nOverview: %v", doc.Overview)
 	}
 	return embed
 }

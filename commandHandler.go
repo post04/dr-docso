@@ -76,7 +76,6 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 	if strings.ToLower(parts[0][len(handler.Prefix):]) == "help" {
 		fmt.Println("help command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
 		if len(parts) == 1 {
-
 			session.ChannelMessageSendEmbed(msg.ChannelID, handler.HelpCommand)
 		} else {
 			embed := &discordgo.MessageEmbed{}
@@ -91,7 +90,7 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			} else {
 				embed.Title = "Invalid command!"
-				embed.Description = fmt.Sprintf("Please use %s help to get all commands!", handler.Prefix)
+				embed.Description = fmt.Sprintf("Please use %shelp to get all commands!", handler.Prefix)
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			}
 		}
