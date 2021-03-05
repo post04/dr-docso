@@ -2,8 +2,9 @@
 package bot
 
 import (
-	"github.com/post04/dr-docso/docs"
 	"sync"
+
+	"github.com/post04/dr-docso/docs"
 )
 
 // getDoc is a wrapper for docs.GetDoc that also implements caching for stdlib packages.
