@@ -126,6 +126,9 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	if doc.Overview != "" {
 		embed.Description += fmt.Sprintf("\nOverview: %v", doc.Overview)
 	}
+	if len(embed.Description) > 2000 {
+		embed.Description = embed.Description[:1900] + "\n*Note this embed has been cut because it is too long*"
+	}
 	return embed
 }
 
