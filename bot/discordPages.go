@@ -101,7 +101,6 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
 			})
-			break
 		case rightArrow:
 			// update last used so the listener isn't deemed unused and deleted
 			pageListeners[reaction.MessageID].LastUsed = MakeTimestamp()
@@ -121,14 +120,12 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 				},
 			})
 			// done :sunglasses:
-			break
 		case destroyEmoji:
 			// remove the specific page listener from the map, no longer listening for reactions
 			delete(pageListeners, reaction.MessageID)
 			// delete the embed the bot made, just cleans itself up.
 			session.ChannelMessageDelete(reaction.ChannelID, reaction.MessageID)
 			// done :sunglasses:
-			break
 		default:
 			// done :sunglasses:
 			break
