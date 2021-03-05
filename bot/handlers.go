@@ -22,7 +22,7 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 	case 0: // probably impossible
 		return
 	case 1: // only the invocation
-		msg = helpShortResponse()
+		msg = helpShortResponse() // TODO: probably should just use the variable here.
 	case 2: // invocation + arg
 		msg = pkgResponse(fields[1])
 	case 3: // invocation + pkg + func
