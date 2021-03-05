@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	c        Config
-	commands = []string{"help", "docs"}
+	c Config
 )
 
 func ready(session *discordgo.Session, evt *discordgo.Ready) {
@@ -45,12 +44,12 @@ func main() {
 	bot.AddHandler(ready)
 	bot.AddHandler(cmd.ReactionListen)
 
-	commandHandlerStruct := New(c.Prefix, true)
-	commandHandlerStruct.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev", cmd.HandleDoc)
-	commandHandlerStruct.AddCommand("getfuncs", "{prefix}getfuncs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev", cmd.FuncsPages)
-	commandHandlerStruct.AddCommand("gettypes", "{prefix}gettypes github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev", cmd.TypesPages)
-	commandHandlerStruct.GenHelp()
-	bot.AddHandler(commandHandlerStruct.OnMessage)
+	cmdhandler := New(c.Prefix, true)
+	cmdhandler.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev", cmd.HandleDoc)
+	cmdhandler.AddCommand("getfuncs", "{prefix}getfuncs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev", cmd.FuncsPages)
+	cmdhandler.AddCommand("gettypes", "{prefix}gettypes github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev", cmd.TypesPages)
+	cmdhandler.GenHelp()
+	bot.AddHandler(cmdhandler.OnMessage)
 	err = bot.Open()
 	if err != nil {
 		log.Fatal("ERROR OPENING CONNECTION", err)

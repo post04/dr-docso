@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -199,21 +198,19 @@ func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
 			return
 		}
-		var pageLimit = int(math.Ceil(float64(len(doc.Functions)) / 10.0))
-		var page = &ReactionListener{
+		page := &ReactionListener{
 			Type:        "functions",
 			CurrentPage: 1,
-			PageLimit:   pageLimit,
+			PageLimit:   calcLimit(len(doc.Functions), 10),
 			UserID:      m.Author.ID,
 			Data:        doc,
 			LastUsed:    MakeTimestamp(),
 		}
-		textTosend := formatForMessage(page)
 		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       "functions",
-			Description: textTosend,
+			Description: formatForMessage(page),
 			Footer: &discordgo.MessageEmbedFooter{
-				Text: "Page 1/" + fmt.Sprint(pageLimit),
+				Text: "Page 1/" + fmt.Sprint(page.PageLimit),
 			},
 		})
 		if err != nil {
@@ -246,21 +243,19 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
 			return
 		}
-		var pageLimit = int(math.Ceil(float64(len(doc.Types)) / 10.0))
-		var page = &ReactionListener{
+		page := &ReactionListener{
 			Type:        "types",
 			CurrentPage: 1,
-			PageLimit:   pageLimit,
+			PageLimit:   calcLimit(len(doc.Types), 10),
 			UserID:      m.Author.ID,
 			Data:        doc,
 			LastUsed:    MakeTimestamp(),
 		}
-		textTosend := formatForMessage(page)
 		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       "types",
-			Description: textTosend,
+			Description: formatForMessage(page),
 			Footer: &discordgo.MessageEmbedFooter{
-				Text: "Page 1/" + fmt.Sprint(pageLimit),
+				Text: "Page 1/" + fmt.Sprint(page.PageLimit),
 			},
 		})
 		if err != nil {

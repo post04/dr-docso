@@ -38,9 +38,8 @@ func MakeTimestamp() int64 {
 func CheckListeners() {
 	for {
 		time.Sleep(6 * time.Minute)
-		now := MakeTimestamp()
 		for key, listener := range pageListeners {
-			if now-listener.LastUsed > 300000 {
+			if MakeTimestamp()-listener.LastUsed > 300000 {
 				delete(pageListeners, key)
 			}
 		}
@@ -95,10 +94,9 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			}
 			// decrease current page
 			pageListeners[reaction.MessageID].CurrentPage -= 1
-			textTosend := formatForMessage(pageListeners[reaction.MessageID])
 			session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, &discordgo.MessageEmbed{
 				Title:       pageListeners[reaction.MessageID].Type,
-				Description: textTosend,
+				Description: formatForMessage(pageListeners[reaction.MessageID]),
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
@@ -115,10 +113,9 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			}
 			// update current page by 1
 			pageListeners[reaction.MessageID].CurrentPage++
-			textTosend := formatForMessage(pageListeners[reaction.MessageID])
 			session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, &discordgo.MessageEmbed{
 				Title:       pageListeners[reaction.MessageID].Type,
-				Description: textTosend,
+				Description: formatForMessage(pageListeners[reaction.MessageID]),
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
