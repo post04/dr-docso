@@ -37,7 +37,7 @@ func (handler *CommandHandler) GenHelp() {
 	}
 
 	var longestCommand int
-	desc := []string{}
+	var desc []string
 	for name := range handler.Commands {
 		if len(name) > longestCommand {
 			longestCommand = len(name)
@@ -75,7 +75,10 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 			return
 		}
 	}
-	if strings.ToLower(parts[0][len(handler.Prefix):]) == "help" {
+	cmd := strings.ToLower(strings.TrimPrefix(parts[0], handler.Prefix))
+
+	switch cmd {
+	case "help":
 		fmt.Println("help command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
 		if len(parts) == 1 {
 			session.ChannelMessageSendEmbed(msg.ChannelID, handler.HelpCommand)
@@ -88,16 +91,16 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 					strings.ToLower(parts[1]),
 					command.Help,
 					command.Description)
-				embed.Title = strings.ToLower(parts[1]) + " Command!"
+				embed.Title = strings.ToLower(parts[1]) + " Command"
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			} else {
-				embed.Title = "Invalid command!"
-				embed.Description = fmt.Sprintf("Please use %shelp to get all commands!", handler.Prefix)
+				embed.Title = "Unknown command"
+				embed.Description = fmt.Sprintf("%q is not a valid command; use %shelp to get available commands.", parts[1], handler.Prefix)
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			}
 		}
-	} else {
-		if command, ok := handler.Commands[strings.ToLower(parts[0][len(handler.Prefix):])]; ok {
+	default:
+		if command, ok := handler.Commands[cmd]; ok {
 			fmt.Println(parts[0][len(handler.Prefix):] + " command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
 			go command.Run(session, msg, handler.Prefix)
 		}
