@@ -46,7 +46,7 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 //
 // i.e, `.docs strings Builder`
 func queryResponse(pkg, name string) *discordgo.MessageEmbed {
-	if strings.Contains(name, "*") {
+	if strings.ContainsAny(name, "*|[]()+") {
 		return queryGlobResponse(pkg, name)
 	}
 	doc, err := getDoc(pkg)
@@ -133,8 +133,8 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 //
 // i.e, `.docs regexp Regexp.Match`
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
-	if strings.Contains(t, "*") ||
-		strings.Contains(name, "*") {
+	if strings.ContainsAny(t, "*|[]()+") ||
+		strings.ContainsAny(name, "*|[]()+") {
 		return methodGlobResponse(pkg, t, name)
 	}
 
