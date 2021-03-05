@@ -91,6 +91,28 @@ func GetDoc(pkg string) (*Doc, error) {
 		funcs = append(funcs, fn)
 	})
 
+	// type funcs
+	doc.Find("div.Documentation-typeFunc").Each(func(_ int, item *goquery.Selection) {
+		sign = item.Find("pre").First().Text()
+		fn := Function{
+			Signature: sign,
+			Type:      FnNormal,
+		}
+		if matches := reFunc.FindStringSubmatch(sign); len(matches) == 2 {
+			fn.Name = matches[1]
+		} else {
+			return
+		}
+		fn.Example = item.Find("textarea.Documentation-exampleCode").First().Text()
+		item.Find("p").Each(func(_ int, p *goquery.Selection) {
+			par = p.Text()
+			if par != "" {
+				fn.Comments = append(fn.Comments, par)
+			}
+		})
+		funcs = append(funcs, fn)
+	})
+
 	// methods
 	doc.Find("div.Documentation-typeMethod").Each(func(_ int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
