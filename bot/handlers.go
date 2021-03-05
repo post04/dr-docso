@@ -9,6 +9,8 @@ import (
 	"github.com/post04/dr-docso/glob"
 )
 
+const regexpSpecials = "*|[]()+{}-"
+
 // DocsHelpEmbed is the help for the docs command.
 var DocsHelpEmbed = &discordgo.MessageEmbed{
 	Title: "Docs help",
@@ -46,7 +48,7 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 //
 // i.e, `.docs strings Builder`
 func queryResponse(pkg, name string) *discordgo.MessageEmbed {
-	if strings.ContainsAny(name, "*|[]()+") {
+	if strings.ContainsAny(name, regexpSpecials) {
 		return queryGlobResponse(pkg, name)
 	}
 	doc, err := getDoc(pkg)
@@ -136,8 +138,8 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 //
 // i.e, `.docs regexp Regexp.Match`
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
-	if strings.ContainsAny(t, "*|[]()+") ||
-		strings.ContainsAny(name, "*|[]()+") {
+	if strings.ContainsAny(t, regexpSpecials) ||
+		strings.ContainsAny(name, regexpSpecials) {
 		return methodGlobResponse(pkg, t, name)
 	}
 
