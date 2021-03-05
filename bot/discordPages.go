@@ -49,7 +49,7 @@ func CheckListeners() {
 func formatForMessage(page *ReactionListener) string {
 	s := ""
 	max := page.CurrentPage * 10
-	min := max - 9
+	min := max - 10
 	curr := min
 	if page.Type == "functions" {
 		if max > len(page.Data.Functions) {

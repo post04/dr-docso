@@ -179,7 +179,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Help %v", state),
-		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example!\n\n%v%v strings", prefix, state),
+		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example\n\n%v%v strings", prefix, state),
 	}
 }
 
@@ -196,6 +196,10 @@ func FuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 		doc, err := getDoc(fields[1])
 		if err != nil || doc == nil {
 			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
+			return
+		}
+		if len(doc.Functions) == 0 {
+			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("The package `%s` has no functions", fields[1]))
 			return
 		}
 		page := &ReactionListener{
@@ -241,6 +245,10 @@ func TypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix string)
 		doc, err := getDoc(fields[1])
 		if err != nil || doc == nil {
 			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("Error while getting the page for the package `%s`", fields[1]))
+			return
+		}
+		if len(doc.Functions) == 0 {
+			s.ChannelMessageSendEmbed(m.ChannelID, errResponse("The package `%s` has no types", fields[1]))
 			return
 		}
 		page := &ReactionListener{
