@@ -11,7 +11,7 @@ import (
 
 // DocsHelpEmbed - the embed to give help to the docs command.
 var DocsHelpEmbed = &discordgo.MessageEmbed{
-	Title: "Docs help!",
+	Title: "Docs help",
 }
 
 // HandleDoc  is the handler for the doc command.
@@ -118,7 +118,7 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Info for %s", pkg),
-		Description: fmt.Sprintf("Types: %v\nFunctions:%v", len(doc.Types), len(doc.Functions)),
+		Description: fmt.Sprintf("Types: %v\nFunctions: %v", len(doc.Types), len(doc.Functions)),
 	}
 	if doc.Overview != "" {
 		embed.Description += fmt.Sprintf("\nOverview: %v", doc.Overview)
