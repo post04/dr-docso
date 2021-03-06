@@ -1,6 +1,10 @@
 package main
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"time"
+
+	"github.com/bwmarrin/discordgo"
+)
 
 type Command struct {
 	Help        string
@@ -15,6 +19,7 @@ type CommandHandler struct {
 	OnMessageHandler  func(session *discordgo.Session, msg *discordgo.MessageCreate)
 	PreCommandHandler func(session *discordgo.Session, msg *discordgo.MessageCreate) bool
 	HelpCommand       *discordgo.MessageEmbed
+	TimeStarted       time.Time
 }
 
 type Config struct {

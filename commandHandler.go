@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -28,6 +29,7 @@ func (handler *CommandHandler) AddCommand(name string, help string, description 
 
 // GenHelp generates the help command output.
 func (handler *CommandHandler) GenHelp() {
+	handler.TimeStarted = time.Now()
 	embed := &discordgo.MessageEmbed{
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: fmt.Sprintf("Use %shelp commandName to get more info about a command", handler.Prefix),
@@ -99,6 +101,13 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 				session.ChannelMessageSendEmbed(msg.ChannelID, embed)
 			}
 		}
+	case "info":
+		fmt.Println("info command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
+
+		session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
+			Title:       "dr-docso by post and insomnia",
+			Description: fmt.Sprintf("Library: [DiscordGo](https://github.com/bwmarrin/discordgo)\nUptime: %s\nPrefix: %s\nGithub Repo: [here](https://github.com/post04/dr-docso)\nInvite: [Click me](https://discord.com/oauth2/authorize?client_id=817416218390560798&permissions=3221613648&scope=bot)", time.Since(handler.TimeStarted), handler.Prefix),
+		})
 	default:
 		if command, ok := handler.Commands[cmd]; ok {
 			fmt.Println(parts[0][len(handler.Prefix):] + " command ran by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
