@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -24,7 +23,7 @@ func ready(session *discordgo.Session, evt *discordgo.Ready) {
 }
 
 func getConfig() {
-	fileBytes, err := ioutil.ReadFile("config.json")
+	fileBytes, err := os.ReadFile("config.json")
 	if err != nil {
 		log.Fatal(err)
 	}
