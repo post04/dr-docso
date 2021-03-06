@@ -26,17 +26,23 @@ func ready(session *discordgo.Session, evt *discordgo.Ready) {
 func getConfig() {
 	fileBytes, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = json.Unmarshal(fileBytes, &c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
 func main() {
 	getConfig()
-	cmd.DocsHelpEmbed.Description = fmt.Sprintf("__**Examples:**__ \n%vdocs strings\n%vdocs strings equalfold\n%vdocs strings builder\n%vdocs strings builder.*\n%vdocs strings *.writestring", c.Prefix, c.Prefix, c.Prefix, c.Prefix, c.Prefix)
+	cmd.DocsHelpEmbed.Description = fmt.Sprintf(`__**Examples:**__
+%sdocs strings
+%sdocs strings equalfold
+%sdocs strings builder
+%sdocs strings builder.*
+%sdocs strings *.writestring`,
+		c.Prefix, c.Prefix, c.Prefix, c.Prefix, c.Prefix)
 	bot, err := discordgo.New("Bot " + c.Token)
 	if err != nil {
 		log.Fatal("ERROR LOGGING IN", err)
