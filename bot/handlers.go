@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/post04/dr-docso/docs"
@@ -216,7 +217,7 @@ func HandleFuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix s
 			PageLimit:   calcLimit(len(doc.Functions), 10),
 			UserID:      m.Author.ID,
 			Data:        doc,
-			LastUsed:    MakeTimestamp(),
+			LastUsed:    time.Now(),
 		}
 		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       "functions",
@@ -265,7 +266,7 @@ func HandleTypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix s
 			PageLimit:   calcLimit(len(doc.Types), 10),
 			UserID:      m.Author.ID,
 			Data:        doc,
-			LastUsed:    MakeTimestamp(),
+			LastUsed:    time.Now(),
 		}
 		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       "types",
