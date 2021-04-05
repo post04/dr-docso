@@ -30,33 +30,33 @@ func (handler *CommandHandler) AddCommand(name string, help string, description 
 // GenHelp generates the help command output.
 func (handler *CommandHandler) GenHelp() {
 	handler.TimeStarted = time.Now()
-	embed := &discordgo.MessageEmbed{
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("Use %shelp commandName to get more info about a command", handler.Prefix),
-		},
-		Title:       "Available commands",
-		Description: "```autoit\n",
-	}
 
 	var longestCommand int
-	var desc []string
 	for name := range handler.Commands {
 		if len(name) > longestCommand {
 			longestCommand = len(name)
 		}
-		desc = append(desc, name)
-	}
-	spaces := " "
-	for _, cmdName := range desc {
-		spaces = " "
-		if len(cmdName) < longestCommand {
-			spaces = strings.Repeat(" ", longestCommand-len(cmdName)+1)
-		}
-		embed.Description += fmt.Sprintf("%s%s%s#%s\n", handler.Prefix, cmdName, spaces, handler.Commands[cmdName].Description)
 	}
 
-	embed.Description += "```"
-	handler.HelpCommand = embed
+	// Build the description
+	embedDesc := strings.Builder{}
+	embedDesc.WriteString("```autoit\n")
+	for name := range handler.Commands {
+		embedDesc.WriteString(handler.Prefix)
+		embedDesc.WriteString(name)
+		embedDesc.WriteString(strings.Repeat(" ", (longestCommand-len(name))+1))
+		embedDesc.WriteString(handler.Commands[name].Description)
+		embedDesc.WriteRune('\n')
+	}
+	embedDesc.WriteString("```")
+
+	handler.HelpCommand = &discordgo.MessageEmbed{
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("Use %shelp commandName to get more info about a command", handler.Prefix),
+		},
+		Title:       "Available commands",
+		Description: embedDesc.String(),
+	}
 }
 
 // OnMessage handles onmessage event from discordgo for command handler lol
@@ -72,8 +72,8 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 		return
 	}
 
-	if handler.PreCommandHandler != nil {
-		if !handler.PreCommandHandler(session, msg) {
+	if handler.Middleware != nil {
+		if !handler.Middleware(session, msg) {
 			return
 		}
 	}

@@ -13,13 +13,13 @@ type Command struct {
 }
 
 type CommandHandler struct {
-	Prefix            string
-	Commands          map[string]*Command
-	IgnoreBots        bool
-	OnMessageHandler  func(session *discordgo.Session, msg *discordgo.MessageCreate)
-	PreCommandHandler func(session *discordgo.Session, msg *discordgo.MessageCreate) bool
-	HelpCommand       *discordgo.MessageEmbed
-	TimeStarted       time.Time
+	Prefix           string
+	Commands         map[string]*Command
+	IgnoreBots       bool
+	OnMessageHandler func(session *discordgo.Session, msg *discordgo.MessageCreate)
+	Middleware       func(session *discordgo.Session, msg *discordgo.MessageCreate) bool
+	HelpCommand      *discordgo.MessageEmbed
+	TimeStarted      time.Time
 }
 
 type Config struct {
