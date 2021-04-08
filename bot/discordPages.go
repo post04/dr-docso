@@ -22,24 +22,19 @@ type ReactionListener struct {
 	PageLimit   int
 	UserID      string
 	Data        *docs.Doc
-	LastUsed    int64 // use uint64 maybe?
+	LastUsed    time.Time
 }
 
 var (
 	pageListeners = make(map[string]*ReactionListener)
 )
 
-// MakeTimestamp makes an ms timestamp
-func MakeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
 // CheckListeners checks all active reaction listeners and kills inactive ones
-func CheckListeners() {
-	for {
-		time.Sleep(6 * time.Minute)
+func CheckListeners(GcCycle time.Duration) {
+	garbageCollector := time.NewTicker(GcCycle)
+	for range garbageCollector.C {
 		for key, listener := range pageListeners {
-			if MakeTimestamp()-listener.LastUsed > 300000 {
+			if time.Since(listener.LastUsed) > time.Minute {
 				delete(pageListeners, key)
 			}
 		}
@@ -85,7 +80,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 		// when the reaction used is a left arrow (page decrease)
 		case leftArrow:
 			// update last used so the listener isn't deemed inactive
-			pageListeners[reaction.MessageID].LastUsed = MakeTimestamp()
+			pageListeners[reaction.MessageID].LastUsed = time.Now()
 			// remove reaction, better user experience
 			session.MessageReactionRemove(reaction.ChannelID, reaction.MessageID, leftArrow, reaction.UserID)
 			// If page is already 1 (minimum it can be)
@@ -103,7 +98,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			})
 		case rightArrow:
 			// update last used so the listener isn't deemed unused and deleted
-			pageListeners[reaction.MessageID].LastUsed = MakeTimestamp()
+			pageListeners[reaction.MessageID].LastUsed = time.Now()
 			// remove reaction for better user expirence
 			session.MessageReactionRemove(reaction.ChannelID, reaction.MessageID, rightArrow, reaction.UserID)
 			// if the page we're on right now is already the maximum page length we have, on page 7 out of 7
@@ -114,6 +109,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			pageListeners[reaction.MessageID].CurrentPage++
 			session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, &discordgo.MessageEmbed{
 				Title:       pageListeners[reaction.MessageID].Type,
+				URL:         pageListeners[reaction.MessageID].Data.URL,
 				Description: formatForMessage(pageListeners[reaction.MessageID]),
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
