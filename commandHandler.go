@@ -45,6 +45,7 @@ func (handler *CommandHandler) GenHelp() {
 		embedDesc.WriteString(handler.Prefix)
 		embedDesc.WriteString(name)
 		embedDesc.WriteString(strings.Repeat(" ", (longestCommand-len(name))+1))
+		embedDesc.WriteString("#")
 		embedDesc.WriteString(handler.Commands[name].Description)
 		embedDesc.WriteRune('\n')
 	}

@@ -95,11 +95,20 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: %s", pkg, name),
+		URL:         fmt.Sprintf("%v#%v", doc.URL, correctName(name)),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("%v#%v", doc.URL, name),
+			Text: fmt.Sprintf("%v#%v", doc.URL, correctName(name)),
 		},
 	}
+}
+
+// this function is used to capitalize the first letter of a word
+func correctName(word string) string {
+	first := word[:1]
+	word = word[1:]
+	word = strings.ToUpper(first) + word
+	return word
 }
 
 // errResponse is like fmt.Sprintf, formats a message and returns an embed.
@@ -124,7 +133,11 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Info for %s", pkg),
+		URL:         fmt.Sprintf("%v", doc.URL),
 		Description: fmt.Sprintf("Types: %v\nFunctions: %v", len(doc.Types), len(doc.Functions)),
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
 	}
 	if doc.Overview != "" {
 		embed.Description += fmt.Sprintf("\nOverview: %v", doc.Overview)
@@ -178,6 +191,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
+		URL:         hyper,
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: hyper,
@@ -221,6 +235,7 @@ func HandleFuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix s
 		}
 		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       "functions",
+			URL:         doc.URL + "#pkg-functions",
 			Description: formatForMessage(page),
 			Footer: &discordgo.MessageEmbedFooter{
 				Text: "Page 1/" + fmt.Sprint(page.PageLimit),
@@ -270,6 +285,7 @@ func HandleTypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix s
 		}
 		m, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       "types",
+			URL:         doc.URL + "#pkg-types",
 			Description: formatForMessage(page),
 			Footer: &discordgo.MessageEmbedFooter{
 				Text: "Page 1/" + fmt.Sprint(page.PageLimit),
@@ -329,6 +345,7 @@ func methodGlobResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       "Matches",
+		URL:         doc.URL,
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: doc.URL,
@@ -380,6 +397,7 @@ func queryGlobResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Matches for `%s` in package %s", name, pkg),
+		URL:         doc.URL,
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: doc.URL,

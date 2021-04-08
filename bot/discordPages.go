@@ -89,9 +89,16 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			}
 			// decrease current page
 			pageListeners[reaction.MessageID].CurrentPage -= 1
+			URL := pageListeners[reaction.MessageID].Data.URL
+			if pageListeners[reaction.MessageID].Type == "functions" {
+				URL += "#pkg-functions"
+			} else {
+				URL += "#pkg-types"
+			}
 			session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, &discordgo.MessageEmbed{
 				Title:       pageListeners[reaction.MessageID].Type,
 				Description: formatForMessage(pageListeners[reaction.MessageID]),
+				URL:         URL,
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
@@ -107,9 +114,15 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			}
 			// update current page by 1
 			pageListeners[reaction.MessageID].CurrentPage++
+			URL := pageListeners[reaction.MessageID].Data.URL
+			if pageListeners[reaction.MessageID].Type == "functions" {
+				URL += "#pkg-functions"
+			} else {
+				URL += "#pkg-types"
+			}
 			session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, &discordgo.MessageEmbed{
 				Title:       pageListeners[reaction.MessageID].Type,
-				URL:         pageListeners[reaction.MessageID].Data.URL,
+				URL:         URL,
 				Description: formatForMessage(pageListeners[reaction.MessageID]),
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
