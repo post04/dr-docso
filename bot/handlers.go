@@ -43,12 +43,12 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 	if msg == nil {
 		msg = errResponse("No results found, possibly an internal error.")
 	}
-	new_m, err := s.ChannelMessageSendEmbed(m.ChannelID, msg)
+	embedM, err := s.ChannelMessageSendEmbed(m.ChannelID, msg)
 	if err != nil {
 		log.Printf("could not send message: %s", err)
 	}
 
-	err = s.MessageReactionAdd(new_m.ChannelID, new_m.ID, destroyEmoji)
+	err = s.MessageReactionAdd(embedM.ChannelID, embedM.ID, destroyEmoji)
 	if err != nil {
 		log.Printf("could not send message: %s", err)
 	}
