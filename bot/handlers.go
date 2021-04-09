@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -42,7 +43,15 @@ func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) 
 	if msg == nil {
 		msg = errResponse("No results found, possibly an internal error.")
 	}
-	s.ChannelMessageSendEmbed(m.ChannelID, msg)
+	new_m, err := s.ChannelMessageSendEmbed(m.ChannelID, msg)
+	if err != nil {
+		log.Printf("could not send message: %s", err)
+	}
+
+	err = s.MessageReactionAdd(new_m.ChannelID, new_m.ID, destroyEmoji)
+	if err != nil {
+		log.Printf("could not send message: %s", err)
+	}
 }
 
 // queryResponse generates the response for a query.
