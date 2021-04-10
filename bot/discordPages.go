@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -69,6 +70,13 @@ func formatForMessage(page *ReactionListener) string {
 
 // ReactionListen listens for the reactions for a previously sent embed.
 func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReactionAdd) {
+	// Shortcut to delete self embed
+	if reaction.UserID != session.State.Ready.User.ID && reaction.Emoji.Name == destroyEmoji {
+		if err := session.ChannelMessageDelete(reaction.ChannelID, reaction.MessageID); err != nil {
+			log.Printf("could not delete message: %s", err)
+		}
+	}
+
 	// if the message being reacted to is in the reaction map
 	if _, ok := pageListeners[reaction.MessageID]; ok {
 		// validating that the user reacting is indeed the user that owns the listener
