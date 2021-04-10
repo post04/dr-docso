@@ -70,13 +70,6 @@ func formatForMessage(page *ReactionListener) string {
 
 // ReactionListen listens for the reactions for a previously sent embed.
 func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReactionAdd) {
-	// Shortcut to delete self embed
-	if reaction.UserID != session.State.Ready.User.ID && reaction.Emoji.Name == destroyEmoji {
-		if err := session.ChannelMessageDelete(reaction.ChannelID, reaction.MessageID); err != nil {
-			log.Printf("could not delete message: %s", err)
-		}
-	}
-
 	// if the message being reacted to is in the reaction map
 	if _, ok := pageListeners[reaction.MessageID]; ok {
 		// validating that the user reacting is indeed the user that owns the listener
@@ -146,6 +139,18 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 		default:
 			// done :sunglasses:
 			break
+		}
+	}
+	if reaction.UserID == session.State.User.ID || reaction.Emoji.Name != destroyEmoji {
+		return
+	}
+	msg, err := session.ChannelMessage(reaction.ChannelID, reaction.MessageID)
+	if err != nil {
+		return
+	}
+	if msg.Author.ID == session.State.User.ID {
+		if err := session.ChannelMessageDelete(reaction.ChannelID, reaction.MessageID); err != nil {
+			log.Printf("could not delete message: %s", err)
 		}
 	}
 }
