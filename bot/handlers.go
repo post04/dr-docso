@@ -65,9 +65,9 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	if err != nil {
 		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
 	}
-
 	var msg string
 	for _, fn := range doc.Functions {
+		// Why is the first check there?
 		if fn.Type == docs.FnNormal && strings.EqualFold(fn.Name, name) {
 			// match found
 			name = fn.Name
