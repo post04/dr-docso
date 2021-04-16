@@ -73,7 +73,7 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 			name = fn.Name
 			msg += fmt.Sprintf("`%s`", fn.Signature)
 			if len(fn.Comments) > 0 {
-				msg += fmt.Sprintf("\n%s", fn.Comments[0])
+				msg += fmt.Sprintf("\n%s", strings.Join(fn.Comments, "\n"))
 			} else {
 				msg += "\n*no information*"
 			}
@@ -88,7 +88,7 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 			if strings.EqualFold(name, t.Name) {
 				msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
 				if len(t.Comments) > 0 {
-					msg += t.Comments[0]
+					msg += strings.Join(t.Comments, "\n")
 				} else {
 					msg += "*no information available*\n"
 				}

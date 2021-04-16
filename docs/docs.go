@@ -144,7 +144,7 @@ func GetDoc(pkg string) (*Doc, error) {
 	// types
 	doc.Find("div.Documentation-type").Each(func(_ int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
-		sign = strings.ReplaceAll(sign, "\n", "")
+		//sign = strings.ReplaceAll(sign, "\n", "")
 		t := Type{Signature: sign}
 		if matches := reType.FindStringSubmatch(sign); len(matches) == 3 {
 			t.Name = matches[1]

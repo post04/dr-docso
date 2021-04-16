@@ -141,6 +141,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 			// done :sunglasses:
 			break
 		}
+		return
 	}
 	if reaction.UserID == session.State.User.ID || reaction.Emoji.Name != destroyEmoji {
 		return
