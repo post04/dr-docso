@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+
 	"github.com/post04/dr-docso/docs"
 )
 
@@ -148,9 +149,13 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 	if err != nil {
 		return
 	}
-	if msg.Author.ID == session.State.User.ID {
-		if err := session.ChannelMessageDelete(reaction.ChannelID, reaction.MessageID); err != nil {
-			log.Printf("could not delete message: %s", err)
+	if msg.Author.ID == session.State.User.ID && len(msg.Embeds) > 0 {
+		edit := &discordgo.MessageEmbed{
+			Title: msg.Embeds[0].Title,
+			URL:   msg.Embeds[0].URL,
+		}
+		if _, err := session.ChannelMessageEditEmbed(reaction.ChannelID, reaction.MessageID, edit); err != nil {
+			log.Printf("could not edit message: %s", err)
 		}
 	}
 }
