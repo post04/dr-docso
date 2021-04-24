@@ -67,7 +67,7 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 	var msg string
 	for _, fn := range doc.Functions {
-		// Why is the first check there?
+		// Why is the first check there? // because this is not a method query.
 		if fn.Type == docs.FnNormal && strings.EqualFold(fn.Name, name) {
 			// match found
 			name = fn.Name
