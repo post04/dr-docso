@@ -104,10 +104,11 @@ func queryResponse(pkg, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: %s", pkg, name),
-		URL:         fmt.Sprintf("%v#%v", doc.URL, correctName(name)),
+		URL:         fmt.Sprintf("%s#%s", doc.URL, correctName(name)),
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("%v#%v", doc.URL, correctName(name)),
+			// NOTE(insomnia) please do not use %s when formatting strings, it's not for strings, it's for GoStringer.
+			Text: fmt.Sprintf("%s#%s", doc.URL, correctName(name)),
 		},
 	}
 }
@@ -142,14 +143,14 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Info for %s", pkg),
-		URL:         fmt.Sprintf("%v", doc.URL),
-		Description: fmt.Sprintf("Types: %v\nFunctions: %v", len(doc.Types), len(doc.Functions)),
+		URL:         fmt.Sprintf("%s", doc.URL),
+		Description: fmt.Sprintf("Types: %s\nFunctions: %s", len(doc.Types), len(doc.Functions)),
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: doc.URL,
 		},
 	}
 	if doc.Overview != "" {
-		embed.Description += fmt.Sprintf("\nOverview: %v", doc.Overview)
+		embed.Description += fmt.Sprintf("\nOverview: %s", doc.Overview)
 	}
 	if len(embed.Description) > 2000 {
 		embed.Description = embed.Description[:1900] + "\n*Note this embed has been cut because it is too long*"
@@ -180,7 +181,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 		if fn.Type == docs.FnMethod &&
 			strings.EqualFold(fn.Name, name) &&
 			strings.EqualFold(fn.MethodOf, t) {
-			hyper = fmt.Sprintf("%v#%v.%v", doc.URL, fn.MethodOf, fn.Name)
+			hyper = fmt.Sprintf("%s#%s.%s", doc.URL, fn.MethodOf, fn.Name)
 			msg += fmt.Sprintf("`%s`", fn.Signature)
 			if len(fn.Comments) > 0 {
 				msg += fmt.Sprintf("\n%s", fn.Comments[0])
@@ -210,8 +211,8 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 
 func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("Help %v", state),
-		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example\n\n%v%v strings", prefix, state),
+		Title:       fmt.Sprintf("Help %s", state),
+		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example\n\n%s%s strings", prefix, state),
 	}
 }
 
