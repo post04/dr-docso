@@ -54,7 +54,7 @@ func formatForMessage(page *ReactionListener) string {
 		}
 		for _, function := range page.Data.Functions[min:max] {
 			curr++
-			s += fmt.Sprintf("\n%s.) %s", curr, function.Name)
+			s += fmt.Sprintf("\n%v.) %s", curr, function.Name)
 		}
 	}
 	if page.Type == "types" {
@@ -63,7 +63,7 @@ func formatForMessage(page *ReactionListener) string {
 		}
 		for _, dType := range page.Data.Types[min:max] {
 			curr++
-			s += fmt.Sprintf("\n%s.) %s", curr, dType.Name)
+			s += fmt.Sprintf("\n%v.) %s", curr, dType.Name)
 		}
 	}
 	return s
@@ -90,7 +90,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 				break
 			}
 			// decrease current page
-			pageListeners[reaction.MessageID].CurrentPage -= 1
+			pageListeners[reaction.MessageID].CurrentPage--
 			URL := pageListeners[reaction.MessageID].Data.URL
 			if pageListeners[reaction.MessageID].Type == "functions" {
 				URL += "#pkg-functions"
@@ -102,7 +102,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 				Description: formatForMessage(pageListeners[reaction.MessageID]),
 				URL:         URL,
 				Footer: &discordgo.MessageEmbedFooter{
-					Text: fmt.Sprintf("Page %s/%s", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
+					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
 			})
 		case rightArrow:
@@ -127,7 +127,7 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 				URL:         URL,
 				Description: formatForMessage(pageListeners[reaction.MessageID]),
 				Footer: &discordgo.MessageEmbedFooter{
-					Text: fmt.Sprintf("Page %s/%s", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
+					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
 			})
 			// done :sunglasses:

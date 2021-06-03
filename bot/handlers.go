@@ -209,6 +209,7 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 }
 
+// PagesShortResponse is the error response for the commands to show pages of types or funcs
 func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Help %s", state),

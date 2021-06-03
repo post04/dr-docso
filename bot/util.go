@@ -4,7 +4,7 @@ package bot
 func calcLimit(num, div int) int {
 	n := num / div
 	if num%div != 0 {
-		n += 1
+		n++
 	}
 	return n
 }
