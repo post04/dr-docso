@@ -144,7 +144,7 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Info for %s", pkg),
 		URL:         fmt.Sprintf("%s", doc.URL),
-		Description: fmt.Sprintf("Types: %s\nFunctions: %s", len(doc.Types), len(doc.Functions)),
+		Description: fmt.Sprintf("Types: %v\nFunctions: %v", len(doc.Types), len(doc.Functions)),
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: doc.URL,
 		},
