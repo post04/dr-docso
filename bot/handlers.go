@@ -11,127 +11,84 @@ import (
 	"github.com/post04/dr-docso/glob"
 )
 
-const regexpSpecials = "*|[]()+{}-"
-
 // DocsHelpEmbed is the help for the docs command.
 var DocsHelpEmbed = &discordgo.MessageEmbed{
 	Title: "Docs help",
 }
 
-// HandleDoc  is the handler for the doc command.
-func HandleDoc(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
-	var msg *discordgo.MessageEmbed
-	fields := strings.Fields(m.Content)
-	switch len(fields) {
-	case 0: // probably impossible
-		return
-	case 1: // only the invocation
-		msg = helpShortResponse() // TODO: probably should just use the variable here.
-	case 2: // invocation + arg
-		msg = pkgResponse(fields[1])
-	case 3: // invocation + pkg + func
-		if strings.Contains(fields[2], ".") {
-			split := strings.Split(fields[2], ".")
-			msg = methodResponse(fields[1], split[0], split[1])
-		} else {
-			msg = queryResponse(fields[1], fields[2])
-		}
-	default:
-		msg = errResponse("Too many arguments.")
-	}
+func HandleDocSend(s *discordgo.Session, m *discordgo.MessageCreate, prefix string) {
+	msg := HandleDoc(s, m.Content, m.ChannelID)
 
-	if msg == nil {
-		msg = errResponse("No results found, possibly an internal error.")
-	}
 	embedM, err := s.ChannelMessageSendEmbed(m.ChannelID, msg)
 	if err != nil {
-		log.Printf("could not send message: %s", err)
+		log.Printf("Could not send message: %v", err)
+		return
 	}
 
 	err = s.MessageReactionAdd(embedM.ChannelID, embedM.ID, destroyEmoji)
 	if err != nil {
-		log.Printf("could not send message: %s", err)
+		log.Printf("could not add reaction: %s", err)
+		return
+	}
+	editListeners[m.ID] = &EditListener{
+		MessageID:  embedM.ID,
+		LastEdited: time.Now(),
 	}
 }
 
-// queryResponse generates the response for a query.
-//
-// i.e, `.docs strings Builder`
-func queryResponse(pkg, name string) *discordgo.MessageEmbed {
-	if strings.ContainsAny(name, regexpSpecials) {
-		return queryGlobResponse(pkg, name)
+func HandleDocUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
+	e, ok := editListeners[m.ID]
+	if !ok {
+		return
 	}
-	doc, err := getDoc(pkg)
-	if err != nil {
-		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
+
+	msg := HandleDoc(s, m.Content, m.ChannelID)
+	if _, err := s.ChannelMessageEditEmbed(m.ChannelID, e.MessageID, msg); err != nil {
+		log.Printf("could not edit message: %s", err)
+		return
 	}
-	var msg string
-	for _, fn := range doc.Functions {
-		// Why is the first check there? // because this is not a method query.
-		if fn.Type == docs.FnNormal && strings.EqualFold(fn.Name, name) {
-			// match found
-			name = fn.Name
-			msg += fmt.Sprintf("`%s`", fn.Signature)
-			if len(fn.Comments) > 0 {
-				msg += fmt.Sprintf("\n%s", strings.Join(fn.Comments, "\n"))
-			} else {
-				msg += "\n*no information*"
-			}
-			if fn.Example != "" {
-				msg += fmt.Sprintf("\n\nExample:\n```go\n%s\n```", fn.Example)
-			}
+	e.LastEdited = time.Now()
+}
+
+// HandleDoc  is the handler for the doc command.
+func HandleDoc(s *discordgo.Session, content string, channelID string) *discordgo.MessageEmbed {
+	var msg *discordgo.MessageEmbed
+	fields := strings.Fields(content)
+	switch len(fields) {
+	case 0: // probably impossible
+		return nil
+	case 1: // only the invocation
+		msg = helpShortResponse() // TODO: probably should just use the variable here.
+	case 2: // invocation + arg
+		// package search
+		if !strings.ContainsRune(fields[1], '.') {
+			msg = pkgResponse(fields[1])
+			break
 		}
+		// io.Reader.Read -> io Reader.Read
+		split := strings.SplitN(fields[1], ".", 2)
+		msg = determineResponse(split[0], split[1])
+	case 3: // invocation + pkg + func
+		msg = determineResponse(fields[1], fields[2])
+	default:
+		msg = errResponse("Too many arguments.")
 	}
 
-	if msg == "" {
-		for _, t := range doc.Types {
-			if strings.EqualFold(name, t.Name) {
-				msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
-				if len(t.Comments) > 0 {
-					msg += strings.Join(t.Comments, "\n")
-				} else {
-					msg += "*no information available*\n"
-				}
-			}
-		}
-	}
-
-	if msg == "" {
-		return errResponse("No type or function `%s` found in package `%s`", name, pkg)
-	}
-	if len(msg) > 2000 {
-		msg = fmt.Sprintf("%s\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
-	}
-	return &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s: %s", pkg, name),
-		URL:         fmt.Sprintf("%s#%s", doc.URL, correctName(name)),
-		Description: msg,
-		Footer: &discordgo.MessageEmbedFooter{
-			// NOTE(insomnia) please do not use %s when formatting strings, it's not for strings, it's for GoStringer.
-			Text: fmt.Sprintf("%s#%s", doc.URL, correctName(name)),
-		},
-	}
-}
-
-// this function is used to capitalize the first letter of a word
-func correctName(word string) string {
-	first := word[:1]
-	word = word[1:]
-	word = strings.ToUpper(first) + word
-	return word
-}
-
-// errResponse is like fmt.Sprintf, formats a message and returns an embed.
-func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
-	return &discordgo.MessageEmbed{
-		Title:       "Error",
-		Description: fmt.Sprintf(format, args...),
-	}
+	return msg
 }
 
 // helpShortResponse returns the docs command's help embed.
 func helpShortResponse() *discordgo.MessageEmbed {
 	return DocsHelpEmbed
+}
+
+func determineResponse(pkg, s string) *discordgo.MessageEmbed {
+	s = strings.Title(s)
+	if strings.ContainsRune(s, '.') {
+		split := strings.SplitN(s, ".", 2)
+		return methodResponse(pkg, split[0], split[1])
+	}
+	return queryResponse(pkg, s)
 }
 
 // pkgResponse generates an embed with general information about a package.
@@ -162,8 +119,7 @@ func pkgResponse(pkg string) *discordgo.MessageEmbed {
 //
 // i.e, `.docs regexp Regexp.Match`
 func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
-	if strings.ContainsAny(t, regexpSpecials) ||
-		strings.ContainsAny(name, regexpSpecials) {
+	if strings.ContainsAny(t, regexpSpecials) || strings.ContainsAny(name, regexpSpecials) {
 		return methodGlobResponse(pkg, t, name)
 	}
 
@@ -175,24 +131,22 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 		return errResponse("Package `%s` seems to have no functions", pkg)
 	}
 
-	var msg string
-	var hyper string
+	var msg, link string
 	for _, fn := range doc.Functions {
-		if fn.Type == docs.FnMethod &&
-			strings.EqualFold(fn.Name, name) &&
-			strings.EqualFold(fn.MethodOf, t) {
-			hyper = fmt.Sprintf("%s#%s.%s", doc.URL, fn.MethodOf, fn.Name)
-			msg += fmt.Sprintf("`%s`", fn.Signature)
-			if len(fn.Comments) > 0 {
-				msg += fmt.Sprintf("\n%s", fn.Comments[0])
-			} else {
-				msg += "\n*no info*"
-			}
-			if fn.Example != "" {
-				msg += fmt.Sprintf("\nExample:\n```go\n%s\n```", fn.Example)
-			}
+		//  not matching
+		if fn.Type != docs.FnMethod || !strings.EqualFold(fn.Name, name) || !strings.EqualFold(fn.MethodOf, t) {
+			continue
 		}
+
+		link = fmt.Sprintf("%s#%s.%s", doc.URL, fn.MethodOf, fn.Name)
+		msg += fmt.Sprintf("`%s`", fn.Signature)
+		if len(fn.Comments) == 0 {
+			msg += "\n*no info*"
+			continue
+		}
+		msg += fmt.Sprintf("\n%s", fn.Comments[0])
 	}
+
 	if msg == "" {
 		return errResponse("Package `%s` does not have `func(%s) %s`", pkg, t, name)
 	}
@@ -201,19 +155,176 @@ func methodResponse(pkg, t, name string) *discordgo.MessageEmbed {
 	}
 	return &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s: func(%s) %s", pkg, t, name),
-		URL:         hyper,
+		URL:         link,
 		Description: msg,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: hyper,
+			Text: link,
 		},
 	}
 }
 
-// PagesShortResponse is the error response for the commands to show pages of types or funcs
-func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
+// methodGlobResponse generates an embed for a glob pattern describing type.method.
+func methodGlobResponse(pkg, t, name string) *discordgo.MessageEmbed {
+	reT, err := glob.Compile(t)
+	if err != nil {
+		return errResponse("Error processing glob pattern:\n```\n%s\n```", err)
+	}
+	reN, err := glob.Compile(name)
+	if err != nil {
+		return errResponse("Error processing glob pattern:\n```\n%s\n```", err)
+	}
+	doc, err := getDoc(pkg)
+	if err != nil {
+		return errResponse("An error occurred while getting the page for the package `%s`", pkg)
+	}
+
+	if len(doc.Functions) == 0 || len(doc.Types) == 0 {
+		return errResponse("No results found matching the expression `%s.%s` in package `%s`", t, name, pkg)
+	}
+
+	var msg string
+	for _, fn := range doc.Functions {
+		if fn.Type != docs.FnMethod || !reT.MatchString(fn.MethodOf) || !reN.MatchString(fn.Name) {
+			continue
+		}
+		msg += fmt.Sprintf("`%s`:\n", fn.Signature)
+		if len(fn.Comments) == 0 {
+			msg += "*no information available*"
+			continue
+		}
+		msg += fn.Comments[0]
+	}
+	if msg == "" {
+		return errResponse("No results found matching the expression `%s.%s` in package `%s`", t, name, pkg)
+	}
+	if len(msg) > 2000 {
+		msg = fmt.Sprintf("%s\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
+	}
 	return &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("Help %s", state),
-		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example\n\n%s%s strings", prefix, state),
+		Title:       "Matches",
+		URL:         doc.URL,
+		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
+	}
+}
+
+// queryResponse generates the response for a query.
+//
+// i.e, `.docs strings Builder`
+func queryResponse(pkg, name string) *discordgo.MessageEmbed {
+	if strings.ContainsAny(name, regexpSpecials) {
+		return queryGlobResponse(pkg, name)
+	}
+	doc, err := getDoc(pkg)
+	if err != nil {
+		return errResponse("An error occurred while fetching the page for pkg `%s`", pkg)
+	}
+
+	var msg string
+	for _, fn := range doc.Functions {
+		if fn.Type != docs.FnNormal || !strings.EqualFold(fn.Name, name) {
+			continue
+		}
+
+		name = fn.Name
+		msg += fmt.Sprintf("`%s`", fn.Signature)
+		if len(fn.Comments) == 0 {
+			msg += "\n*no information*"
+		} else {
+			msg += fmt.Sprintf("\n%s", strings.Join(fn.Comments, "\n"))
+		}
+		if fn.Example != "" {
+			msg += fmt.Sprintf("\n\nExample:\n```go\n%s\n```", fn.Example)
+		}
+	}
+
+	if msg == "" {
+		for _, t := range doc.Types {
+			if !strings.EqualFold(name, t.Name) {
+				continue
+			}
+
+			msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
+			if len(t.Comments) == 0 {
+				msg += "*no information available*\n"
+				continue
+			}
+			msg += strings.Join(t.Comments, "\n")
+		}
+	}
+
+	if msg == "" {
+		return errResponse("No type or function `%s` found in package `%s`", name, pkg)
+	}
+	if len(msg) > 2000 {
+		msg = fmt.Sprintf("%s\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
+	}
+	return &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("%s: %s", pkg, name),
+		URL:         fmt.Sprintf("%s#%s", doc.URL, name),
+		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("%s#%s", doc.URL, name),
+		},
+	}
+}
+
+const regexpSpecials = "*|[]()+{}-"
+
+// queryGlobResponse is the same as queryResponse but it allows globbing.
+func queryGlobResponse(pkg, name string) *discordgo.MessageEmbed {
+	r, err := glob.Compile(name)
+	if err != nil {
+		return errResponse("error parsing glob pattern")
+	}
+	doc, err := getDoc(pkg)
+	if err != nil {
+		return errResponse("Error while fetching the page for the package `%s`", pkg)
+	}
+
+	var msg string
+	for _, fn := range doc.Functions {
+		if fn.Type != docs.FnNormal || !r.MatchString(fn.Name) {
+			continue
+		}
+
+		msg += fmt.Sprintf("`%s`\n", fn.Signature)
+		if len(fn.Comments) == 0 {
+			msg += "*no information available*"
+			continue
+		}
+		msg += fn.Comments[0]
+	}
+
+	for _, t := range doc.Types {
+		if !r.MatchString(t.Name) {
+			continue
+		}
+
+		msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
+		if len(t.Comments) == 0 {
+			msg += "*no information available*"
+			continue
+		}
+		msg += t.Comments[0]
+	}
+
+	if msg == "" {
+		return errResponse("No matches found for the pattern `%s` in package `%s`", name, pkg)
+	}
+
+	if len(msg) > 2000 {
+		msg = fmt.Sprintf("%s...\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
+	}
+	return &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("Matches for `%s` in package %s", name, pkg),
+		URL:         doc.URL,
+		Description: msg,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: doc.URL,
+		},
 	}
 }
 
@@ -264,7 +375,6 @@ func HandleFuncsPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix s
 		s.ChannelMessageSendEmbed(m.ChannelID, PagesShortResponse("getfuncs", prefix))
 		return
 	}
-
 }
 
 // HandleTypesPages is the handler fo the gettypes command
@@ -316,102 +426,18 @@ func HandleTypesPages(s *discordgo.Session, m *discordgo.MessageCreate, prefix s
 	}
 }
 
-// methodGlobResponse generates an embed for a glob pattern describing type.method.
-func methodGlobResponse(pkg, t, name string) *discordgo.MessageEmbed {
-	reT, err := glob.Compile(t)
-	if err != nil {
-		return errResponse("Error processing glob pattern:\n```\n%s\n```", err)
-	}
-	reN, err := glob.Compile(name)
-	if err != nil {
-		return errResponse("Error processing glob pattern:\n```\n%s\n```", err)
-	}
-	doc, err := getDoc(pkg)
-	if err != nil {
-		return errResponse("An error occurred while getting the page for the package `%s`", pkg)
-	}
-
-	if len(doc.Functions) == 0 || len(doc.Types) == 0 {
-		return errResponse("No results found matching the expression `%s.%s` in package `%s`", t, name, pkg)
-	}
-
-	var msg string
-	for _, fn := range doc.Functions {
-		if fn.Type == docs.FnMethod &&
-			reT.MatchString(fn.MethodOf) &&
-			reN.MatchString(fn.Name) {
-			msg += fmt.Sprintf("`%s`:\n", fn.Signature)
-			if len(fn.Comments) > 0 {
-				msg += fn.Comments[0]
-			} else {
-				msg += "*no information available*"
-			}
-		}
-	}
-	if msg == "" {
-		return errResponse("No results found matching the expression `%s.%s` in package `%s`", t, name, pkg)
-	}
-	if len(msg) > 2000 {
-		msg = fmt.Sprintf("%s\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
-	}
+// PagesShortResponse is the error response for the commands to show pages of types or funcs
+func PagesShortResponse(state, prefix string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
-		Title:       "Matches",
-		URL:         doc.URL,
-		Description: msg,
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: doc.URL,
-		},
+		Title:       fmt.Sprintf("Help %s", state),
+		Description: fmt.Sprintf("It seems you didn't have enough arguments, so here's an example\n\n%s%s strings", prefix, state),
 	}
 }
 
-// queryGlobResponse is the same as queryResponse but it allows globbing.
-func queryGlobResponse(pkg, name string) *discordgo.MessageEmbed {
-	r, err := glob.Compile(name)
-	if err != nil {
-		return errResponse("error parsing glob pattern")
-	}
-	doc, err := getDoc(pkg)
-	if err != nil {
-		return errResponse("Error while fetching the page for the package `%s`", pkg)
-	}
-
-	var msg string
-	for _, fn := range doc.Functions {
-		if fn.Type == docs.FnNormal &&
-			r.MatchString(fn.Name) {
-			msg += fmt.Sprintf("`%s`\n", fn.Signature)
-			if len(fn.Comments) > 0 {
-				msg += fn.Comments[0]
-			} else {
-				msg += "*no information available*"
-			}
-		}
-	}
-
-	for _, t := range doc.Types {
-		if r.MatchString(t.Name) {
-			msg += fmt.Sprintf("```go\n%s\n```\n", t.Signature)
-			if len(t.Comments) > 0 {
-				msg += t.Comments[0]
-			} else {
-				msg += "*no information available*"
-			}
-		}
-	}
-
-	if msg == "" {
-		return errResponse("No matches found for the pattern `%s` in package `%s`", name, pkg)
-	}
-
-	if len(msg) > 2000 {
-		msg = fmt.Sprintf("%s...\n\n*note: the message was trimmed to fit the 2k character limit*", msg[:1950])
-	}
+// errResponse is like fmt.Sprintf, formats a message and returns an embed.
+func errResponse(format string, args ...interface{}) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("Matches for `%s` in package %s", name, pkg),
-		URL:         doc.URL,
-		Description: msg,
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: doc.URL,
-		},
+		Title:       "Error",
+		Description: fmt.Sprintf(format, args...),
 	}
 }

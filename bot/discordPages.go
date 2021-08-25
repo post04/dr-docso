@@ -27,8 +27,14 @@ type ReactionListener struct {
 	LastUsed    time.Time
 }
 
+type EditListener struct {
+	MessageID  string
+	LastEdited time.Time
+}
+
 var (
 	pageListeners = make(map[string]*ReactionListener)
+	editListeners = make(map[string]*EditListener)
 )
 
 // CheckListeners checks all active reaction listeners and kills inactive ones
@@ -38,6 +44,11 @@ func CheckListeners(GcCycle time.Duration) {
 		for key, listener := range pageListeners {
 			if time.Since(listener.LastUsed) > time.Minute {
 				delete(pageListeners, key)
+			}
+		}
+		for key, listener := range editListeners {
+			if time.Since(listener.LastEdited) > time.Minute {
+				delete(editListeners, key)
 			}
 		}
 	}
@@ -130,15 +141,12 @@ func ReactionListen(session *discordgo.Session, reaction *discordgo.MessageReact
 					Text: fmt.Sprintf("Page %v/%v", pageListeners[reaction.MessageID].CurrentPage, pageListeners[reaction.MessageID].PageLimit),
 				},
 			})
-			// done :sunglasses:
 		case destroyEmoji:
 			// remove the specific page listener from the map, no longer listening for reactions
 			delete(pageListeners, reaction.MessageID)
 			// delete the embed the bot made, just cleans itself up.
 			session.ChannelMessageDelete(reaction.ChannelID, reaction.MessageID)
-			// done :sunglasses:
 		default:
-			// done :sunglasses:
 			break
 		}
 		return

@@ -13,9 +13,7 @@ import (
 	cmd "github.com/post04/dr-docso/bot"
 )
 
-var (
-	c Config
-)
+var c Config
 
 func ready(session *discordgo.Session, evt *discordgo.Ready) {
 	fmt.Printf("Logged in under: %s#%s\n", evt.User.Username, evt.User.Discriminator)
@@ -51,12 +49,13 @@ func main() {
 	bot.AddHandler(cmd.ReactionListen)
 
 	cmdhandler := New(c.Prefix, true)
-	cmdhandler.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev", cmd.HandleDoc)
+	cmdhandler.AddCommand("docs", "{prefix}docs github.com/bwmarrin/discordgo", "Get the documentation of a package from pkg.go.dev", cmd.HandleDocSend)
 	cmdhandler.AddCommand("funcs", "{prefix}funcs github.com/bwmarrin/discordgo", "Get all the functions in a package from pkg.go.dev", cmd.HandleFuncsPages)
 	cmdhandler.AddCommand("types", "{prefix}types github.com/bwmarrin/discordgo", "Get all the types in a package from pkg.go.dev", cmd.HandleTypesPages)
 	cmdhandler.AddCommand("info", "{prefix}info", "shows information about dr-docso", nil)
 	cmdhandler.GenHelp()
 	bot.AddHandler(cmdhandler.OnMessage)
+	bot.AddHandler(cmdhandler.OnEdit)
 	err = bot.Open()
 	if err != nil {
 		log.Fatal("ERROR OPENING CONNECTION", err)

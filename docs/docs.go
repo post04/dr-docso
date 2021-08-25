@@ -1,6 +1,7 @@
 package docs
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -8,6 +9,26 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+const BASE = "https://pkg.go.dev/"
+
+type Doc struct {
+	URL       string     `json:"url"`
+	Name      string     `json:"name"`
+	Overview  string     `json:"overview"`
+	Types     []Type     `json:"types"`
+	Functions []Function `json:"functions"`
+}
+
+type Function struct {
+	Name      string       `json:"name"`
+	Type      FunctionType `json:"type"`
+	Signature string       `json:"signature"`
+	MethodOf  string       `json:"methodOf"`
+
+	Example  string   `json:"example"`
+	Comments []string `json:"comments"`
+}
 
 type FunctionType string
 
@@ -22,18 +43,6 @@ var (
 	reMethod = regexp.MustCompile(`^func\s\(([a-zA-Z0-9\*\s]+)\)\s([a-zA-Z0-9]+).+$`)
 )
 
-const BASE = "https://pkg.go.dev/"
-
-type Function struct {
-	Name      string       `json:"name"`
-	Type      FunctionType `json:"type"`
-	Signature string       `json:"signature"`
-	MethodOf  string       `json:"methodOf"`
-
-	Example  string   `json:"example"`
-	Comments []string `json:"comments"`
-}
-
 type Type struct {
 	Name      string `json:"name"`
 	Type      string `json:"type"`
@@ -42,12 +51,45 @@ type Type struct {
 	Comments []string `json:"comments"`
 }
 
-type Doc struct {
-	URL       string     `json:"url"`
-	Name      string     `json:"name"`
-	Overview  string     `json:"overview"`
-	Types     []Type     `json:"types"`
-	Functions []Function `json:"functions"`
+// FullComment returns the entire comment from Type.Comments, joined with new lines.
+func (t Type) FullComment() string {
+	switch len(t.Comments) {
+	case 0:
+		return "*no information available*\n"
+	case 1:
+		return string(t.Comments[0]) + "\n"
+	}
+	n := len(t.Comments) - 1
+	for i := 0; i < len(t.Comments); i++ {
+		n += len(t.Comments[i])
+	}
+
+	var b strings.Builder
+	b.Grow(n)
+	b.WriteString(string(t.Comments[0]))
+	for _, d := range t.Comments[1:] {
+		b.WriteRune('\n')
+		b.WriteString(string(d))
+	}
+	return b.String()
+}
+
+type Documentation string
+
+func (d Documentation) Synposis() string {
+	s := string(d)
+	return Synopsis(s)
+}
+
+func Synopsis(s string) string {
+	if len(s) < 400 {
+		return string(s)
+	}
+	s = strings.Split(s, "\n\n")[0]
+	if len(s) < 2000 {
+		return s
+	}
+	return fmt.Sprintf("%s...\n\n*note: the message was trimmed to fit the 2k character limit*", s[:1930])
 }
 
 // GetDoc returns a document representing the specified package/module.
@@ -144,7 +186,7 @@ func GetDoc(pkg string) (*Doc, error) {
 	// types
 	doc.Find("div.Documentation-type").Each(func(_ int, item *goquery.Selection) {
 		sign = item.Find("pre").First().Text()
-		//sign = strings.ReplaceAll(sign, "\n", "")
+		// sign = strings.ReplaceAll(sign, "\n", "")
 		t := Type{Signature: sign}
 		if matches := reType.FindStringSubmatch(sign); len(matches) == 3 {
 			t.Name = matches[1]
@@ -181,7 +223,6 @@ func GetDoc(pkg string) (*Doc, error) {
 // extractType extracts the type from a method definition
 // i.e, `t *Type` -> `Type`
 func extractType(s string) string {
-
 	for i := len(s) - 1; i >= 0; i-- {
 		if unicode.IsSpace(rune(s[i])) ||
 			s[i] == '*' {
