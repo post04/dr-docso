@@ -3,37 +3,67 @@ package bot
 
 import (
 	"sync"
+	"time"
 
 	"github.com/post04/dr-docso/docs"
 )
 
 // getDoc is a wrapper for docs.GetDoc that also implements caching for stdlib packages.
 func getDoc(pkg string) (*docs.Doc, error) {
+	if doc, ok := PkgCache[pkg]; ok {
+		return doc.Doc, nil
+	}
+
 	var err error
-	doc, ok := PkgCache[pkg]
-	if !ok || doc == nil {
+	doc, ok := StdlibCache[pkg]
+	if doc == nil {
 		doc, err = docs.GetDoc(pkg)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// cache the common pkgs
+	mux.Lock()
+	if ok {
+		StdlibCache[pkg] = doc
+	} else {
+		// non-stdlib package
+		PkgCache[pkg] = &TempDoc{
+			Doc:     doc,
+			Created: time.Now(),
+		}
+	}
+	mux.Unlock()
+
+	// cache the stdlib pkgs
 	if ok && doc != nil {
 		mux.Lock()
-		PkgCache[pkg] = doc
+		StdlibCache[pkg] = doc
 		mux.Unlock()
 	}
 	return doc, nil
 }
 
-var (
-	mux      sync.Mutex
-	PkgCache = map[string]*docs.Doc{
-		// Common Packages
-		"github.com/google/uuid":        nil,
-		"github.com/bwmarrin/discordgo": nil,
+func CleanTempDocs(GcCycle time.Duration) {
+	garbageCollector := time.NewTicker(GcCycle)
+	for range garbageCollector.C {
+		for key, cache := range PkgCache {
+			if time.Since(cache.Created) > time.Minute*10 {
+				delete(PkgCache, key)
+			}
+		}
+	}
+}
 
+type TempDoc struct {
+	*docs.Doc
+	Created time.Time
+}
+
+var (
+	mux         sync.Mutex
+	PkgCache    = map[string]*TempDoc{}
+	StdlibCache = map[string]*docs.Doc{
 		// Stdlib
 		"bufio":                                 nil,
 		"context":                               nil,

@@ -19,6 +19,7 @@ func ready(session *discordgo.Session, evt *discordgo.Ready) {
 	fmt.Printf("Logged in under: %s#%s\n", evt.User.Username, evt.User.Discriminator)
 	session.UpdateGameStatus(0, fmt.Sprintf("%shelp for information!", c.Prefix))
 	go cmd.CheckListeners(5 * time.Minute)
+	go cmd.CleanTempDocs(5 * time.Minute)
 }
 
 func getConfig() {
