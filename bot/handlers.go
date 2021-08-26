@@ -68,6 +68,10 @@ func HandleDoc(s *discordgo.Session, content string, channelID string) *discordg
 		// io.Reader.Read -> io Reader.Read
 		split := strings.SplitN(fields[1], ".", 2)
 		msg = determineResponse(split[0], split[1])
+		// if there is an error, we try defaulting to pkgResponse
+		if msg.Title == "Error" {
+			msg = pkgResponse(fields[1])
+		}
 	case 3: // invocation + pkg + func
 		msg = determineResponse(fields[1], fields[2])
 	default:
