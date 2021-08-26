@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/post04/dr-docso/bot"
 )
 
 // New creates an initialized commandhandler
@@ -60,7 +61,7 @@ func (handler *CommandHandler) GenHelp() {
 	}
 }
 
-// OnMessage handles onmessage event from discordgo for command handler lol
+// OnMessage handles onmessage event from discordgo for command handler.
 func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	parts := strings.Fields(msg.Content)
 	if handler.OnMessageHandler != nil {
@@ -107,7 +108,7 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 
 		session.ChannelMessageSendEmbed(msg.ChannelID, &discordgo.MessageEmbed{
 			Title:       "dr-docso by post and insomnia",
-			Description: fmt.Sprintf("Library: [DiscordGo](https://github.com/bwmarrin/discordgo)\nUptime: %s\nPrefix: %s\nGithub Repo: [here](https://github.com/post04/dr-docso)\nInvite: [Click me](https://discord.com/oauth2/authorize?client_id=817416218390560798&permissions=3221613648&scope=bot)", time.Since(handler.TimeStarted), handler.Prefix),
+			Description: fmt.Sprintf("Library: [DiscordGo](https://github.com/bwmarrin/discordgo)\nUptime: <t:%d:R>\nPrefix: %s\nGithub Repo: [here](https://github.com/post04/dr-docso)\nInvite: [Click me](https://discord.com/oauth2/authorize?client_id=817416218390560798&permissions=3221613648&scope=bot)", handler.TimeStarted.Unix(), handler.Prefix),
 		})
 	default:
 		if command, ok := handler.Commands[cmd]; ok {
@@ -115,4 +116,19 @@ func (handler *CommandHandler) OnMessage(session *discordgo.Session, msg *discor
 			go command.Run(session, msg, handler.Prefix)
 		}
 	}
+}
+
+// OnEdit handles onedit event from discordgo for command handler.
+func (handler *CommandHandler) OnEdit(session *discordgo.Session, msg *discordgo.MessageUpdate) {
+	parts := strings.Fields(msg.Content)
+	if len(parts) < 1 || !strings.HasPrefix(parts[0], handler.Prefix) {
+		return
+	}
+	cmd := strings.ToLower(strings.TrimPrefix(parts[0], handler.Prefix))
+	if cmd != "docs" {
+		return
+	}
+
+	fmt.Println(parts[0][len(handler.Prefix):] + " command edit by " + msg.Author.Username + "#" + msg.Author.Discriminator + " in " + msg.ChannelID)
+	bot.HandleDocUpdate(session, msg)
 }
